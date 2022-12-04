@@ -1,7 +1,31 @@
 import { InteractionHandler, InteractionHandlerTypes } from '@sapphire/framework';
-import { ActionRowBuilder, ButtonInteraction, Colors, ModalSubmitInteraction, SelectMenuBuilder } from 'discord.js';
+import {
+    ActionRowBuilder,
+    ButtonInteraction,
+    Colors,
+    ModalSubmitInteraction,
+    SelectMenuBuilder
+} from 'discord.js';
 import { Restaurant, RestaurantAvailabilities } from '../typings/restaurants';
 import { fetchRestaurantAvailabilities, fetchRestaurantById } from '../core/restaurants';
+
+const breakfast = {
+    label: 'Petit-déjeuner',
+    value: 'breakfast',
+    emoji: '🥐',
+};
+
+const lunch = {
+    label: 'Déjeuner',
+    value: 'lunch',
+    emoji: '🍔',
+};
+
+const dinner = {
+    label: 'Dîner',
+    value: 'dinner',
+    emoji: '🍝',
+}
 
 export class ChooseMealPeriod extends InteractionHandler {
     public constructor(ctx) {
@@ -9,13 +33,19 @@ export class ChooseMealPeriod extends InteractionHandler {
     }
 
     public async run(interaction: ModalSubmitInteraction, restaurantId: string) {
-
         await interaction.deferReply({ ephemeral: true });
 
         const rawDate = interaction.fields.getTextInputValue('date');
-        const isValidDate = rawDate.match(/^[0-9]{2}\/[0-9]{2}\/[0-9]{4}$/);
+        let isValidDate = /^[0-9]{2}\/[0-9]{2}\/[0-9]{4}$/.test(rawDate);
+        if (isValidDate) {
+            const [day, month, year] = rawDate.split('/').map((value) => parseInt(value));
+            if (new Date().setFullYear(year, month-1, day) < Date.now()) {
+                isValidDate = false;
+            }
+        }
+
         if (!isValidDate) {
-            await interaction.reply({
+            await interaction.followUp({
                 embeds: [
                     {
                         title: '🛠 Oups, votre date de visite est invalide !',
@@ -33,8 +63,8 @@ export class ChooseMealPeriod extends InteractionHandler {
 
         const rawPartyMix = interaction.fields.getTextInputValue('partyMix');
         const parsedPartyMix = Number.parseInt(rawPartyMix);
-        if (isNaN(parsedPartyMix) || parsedPartyMix < 0 || parsedPartyMix > 10) {
-            await interaction.reply({
+        if (isNaN(parsedPartyMix) || parsedPartyMix < 1 || parsedPartyMix > 10) {
+            await interaction.followUp({
                 embeds: [
                     {
                         title: '🛠 Oups, votre nombre de couverts est invalide !',
@@ -63,44 +93,53 @@ export class ChooseMealPeriod extends InteractionHandler {
 
         const selectMenu = new SelectMenuBuilder()
             .setCustomId('validateNotification')
-            .setPlaceholder('Sélectionnez une période de repas')
-            .setOptions([
+            .setPlaceholder('Sélectionnez une période de repas');
+
+        const embed = {
+            title: 'Sélectionnez une période de repas 🍽️',
+            description: `Super, c'est tout bon pour moi ! Il ne vous reste plus qu'à sélectionner le type de repas que vous désirez, et votre notification sera enregistrée. `,
+            color: Colors.Navy,
+            image: {
+                url: restaurant.imageUrl,
+            },
+            fields: [
                 {
-                    label: 'Petit-déjeuner',
-                    value: 'breakfast',
-                    emoji: '🥐',
+                    name: 'Restaurant',
+                    value: restaurant.name,
+                    inline: true,
                 },
                 {
-                    label: 'Déjeuner',
-                    value: 'lunch',
-                    emoji: '🍔',
+                    name: 'Date de visite',
+                    value: rawDate,
+                    inline: true,
                 },
                 {
-                    label: 'Dîner',
-                    value: 'dinner',
-                    emoji: '🍝',
-                },
-            ])
+                    name: 'Nombre de couverts',
+                    value: rawPartyMix,
+                    inline: true,
+                }
+            ]
+        }
 
         if (availabilities.length === 0) {
-            selectMenu.options.forEach(option => {
-                option.setDescription('Nous ne savons pas encore si ce restaurant proposera ce service à cette date. 🤔');
-            })
+            selectMenu.setOptions([breakfast, lunch, dinner])
+            embed.description += `\n\n⚠️ Attention, les créneaux et services de ce restaurant **n'ont pas été encore publiés**. Merci de vérifier que le restaurant *${restaurant.name}* sera ouvert et proposera le type de service que vous sélectionnerez.`;
         } else {
-            selectMenu.options.forEach(option => {
-                option.setDescription('Ce restaurant ne propose pas ce service à cette date. ❌');
-            })
+            embed.description += `\n\nVoici les créneaux actuellement publiés pour ce restaurant :`;
             availabilities.forEach((availability) => {
                 availability.mealPeriods.forEach((mealPeriod) => {
                     switch (mealPeriod.mealPeriod) {
                         case 'Breakfast':
-                            selectMenu.options[0].setDescription('Le restaurant propose ce service à cette date. ✅');
+                            selectMenu.addOptions([breakfast]);
+                            embed.description += `\n▫️ Petit-déjeuner *(${mealPeriod.slotList.length} créneaux)*`;
                             break;
                         case 'Lunch':
-                            selectMenu.options[1].setDescription('Le restaurant propose ce service à cette date. ✅');
+                            selectMenu.addOptions([lunch]);
+                            embed.description += `\n▫️ Déjeuner *(${mealPeriod.slotList.length} créneaux)*`;
                             break;
                         case 'Dinner':
-                            selectMenu.options[2].setDescription('Le restaurant propose ce service à cette date. ✅');
+                            selectMenu.addOptions([dinner]);
+                            embed.description += `\n▫️ Dîner *(${mealPeriod.slotList.length} créneaux)*`;
                             break;
                     }
                 })
@@ -111,30 +150,7 @@ export class ChooseMealPeriod extends InteractionHandler {
             .addComponents(selectMenu);
 
         await interaction.followUp({
-            embeds: [
-                {
-                    title: 'Sélectionnez une période de repas 🍽️',
-                    description: `Super, c'est tout bon. Il ne me reste plus qu'à vous demander quelle période de repas vous souhaiteriez réserver.`,
-                    color: Colors.Navy,
-                    image: {
-                        url: restaurant.imageUrl,
-                    },
-                    fields: [
-                        {
-                            name: 'Restaurant',
-                            value: restaurant.name,
-                        },
-                        {
-                            name: 'Date de visite',
-                            value: rawDate,
-                        },
-                        {
-                            name: 'Nombre de couverts',
-                            value: rawPartyMix,
-                        }
-                    ]
-                }
-            ],
+            embeds: [embed],
             components: [componentRow],
             ephemeral: true,
         });

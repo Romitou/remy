@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import { ButtonStyle, IntentsBitField, TextInputStyle } from 'discord.js';
 import { SapphireClient } from '@sapphire/framework';
+import { subscribeBookNotifications } from './core/redis';
 
 async function start() {
     const client = new SapphireClient({
@@ -10,6 +11,8 @@ async function start() {
     });
 
     await client.login(process.env.DISCORD_TOKEN);
+
+    await subscribeBookNotifications();
 
     // const guild = await client.guilds.fetch('953390498654076978');
     // const channel = await guild.channels.fetch('1048629821447622807');

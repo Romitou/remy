@@ -12,7 +12,6 @@ export class StartAlertBook extends InteractionHandler {
         let restaurants;
         try {
             restaurants = await fetchRestaurants();
-            console.log(restaurants);
         } catch (e) {
             console.error(e);
             await interaction.reply({
@@ -20,7 +19,7 @@ export class StartAlertBook extends InteractionHandler {
                     {
                         title: '🛠 Oups, quelque chose est cassé !',
                         description: 'On dirait bien que quelque chose ne fonctionne pas comme prévu. Pas d\'inquiétude, cet incident technique a été remonté et sera corrigé le plus vite possible. Nous vous invitons à réessayer ultérieurement.',
-                        color: Colors.Navy,
+                        color: Colors.Red,
                         image: {
                             url: 'https://s3-01.romitou.fr/disneytables/error.png'
                         }
@@ -28,6 +27,7 @@ export class StartAlertBook extends InteractionHandler {
                 ],
                 ephemeral: true,
             });
+            return;
         }
 
         const componentRow = new ActionRowBuilder<SelectMenuBuilder>()

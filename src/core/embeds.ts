@@ -15,19 +15,6 @@ export async function getNotificationDetails(embed: Embed): Promise<Notification
                 const restaurant = await fetchRestaurantByName(field.value)
                 notificationDetails.restaurantId = restaurant.disneyId;
                 break;
-            case 'Période de repas':
-                switch (field.value) {
-                    case 'Déjeuner':
-                        notificationDetails.mealPeriod = 'Lunch';
-                        break;
-                    case 'Dîner':
-                        notificationDetails.mealPeriod = 'Dinner';
-                        break;
-                    case 'Petit-déjeuner':
-                        notificationDetails.mealPeriod = 'Breakfast';
-                        break;
-                }
-                break;
             case 'Date de visite':
                 notificationDetails.date = field.value;
                 break;
