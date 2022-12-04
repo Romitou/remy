@@ -10,6 +10,7 @@ import {
 import { fetchActiveBookAlertsForUser } from '../core/bookAlerts';
 import { BookAlert } from '../typings/bookAlerts';
 import { frenchMealPeriod, normalizeDate } from '../core/utils';
+import Sentry from '@sentry/node';
 
 
 export class MyNotifications extends InteractionHandler {
@@ -23,6 +24,7 @@ export class MyNotifications extends InteractionHandler {
             bookAlerts = await fetchActiveBookAlertsForUser(interaction.user.id);
         } catch (e) {
             console.error(e);
+            Sentry.captureException(e);
             await interaction.reply({
                 embeds: [
                     {

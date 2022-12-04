@@ -1,6 +1,7 @@
 import { InteractionHandler, InteractionHandlerTypes } from '@sapphire/framework';
 import { ButtonInteraction, Colors, EmbedBuilder } from 'discord.js';
 import { completeBookAlert } from '../core/bookAlerts';
+import Sentry from '@sentry/node';
 
 export class MarkNotificationSolved extends InteractionHandler {
     public constructor(ctx) {
@@ -13,6 +14,7 @@ export class MarkNotificationSolved extends InteractionHandler {
             await completeBookAlert(parseInt(notificationId));
         } catch (e) {
             console.error(e);
+            Sentry.captureException(e);
             await interaction.reply({
                 embeds: [
                     {
@@ -39,6 +41,7 @@ export class MarkNotificationSolved extends InteractionHandler {
 
         await interaction.update({
             embeds: [newEmbed],
+            components: [],
         });
 
     }

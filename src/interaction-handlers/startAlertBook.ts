@@ -2,6 +2,7 @@ import { InteractionHandler, InteractionHandlerTypes } from '@sapphire/framework
 import { ActionRowBuilder, ButtonInteraction, Colors, SelectMenuBuilder } from 'discord.js';
 import { fetchRestaurants } from '../core/restaurants';
 import { Restaurant } from '../typings/restaurants';
+import Sentry from '@sentry/node';
 
 export class StartAlertBook extends InteractionHandler {
     public constructor(ctx) {
@@ -14,6 +15,7 @@ export class StartAlertBook extends InteractionHandler {
             restaurants = await fetchRestaurants();
         } catch (e) {
             console.error(e);
+            Sentry.captureException(e);
             await interaction.reply({
                 embeds: [
                     {

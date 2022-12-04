@@ -1,8 +1,8 @@
 import { createClient } from 'redis';
 import { BookNotification } from '../typings/bookAlerts';
 import { container } from '@sapphire/framework';
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from 'discord.js';
-import { frenchMealPeriod } from './utils';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Colors, EmbedBuilder } from 'discord.js';
+import { convertTime12to24, frenchMealPeriod, normalizeDate } from './utils';
 
 export async function subscribeBookNotifications() {
     const client = createClient({
@@ -23,7 +23,8 @@ export async function subscribeBookNotifications() {
 
         const embed = new EmbedBuilder()
             .setTitle(`📬 Nouvelle notification de réservation`)
-            .setDescription('Ici Rémy, je pense avoir une bonne nouvelle pour vous ! Une table est actuellement disponible à la réservation selon les critères que vous avez définis.\n\nVous pouvez réserver cette table en vous rendant sur l\'application Disneyland Paris.\n\nSi vous avez réussi à réserver cette table, merci de me le faire savoir en cliquant sur le bouton ci-dessous !');
+            .setColor(Colors.Navy)
+            .setDescription('▫️ Ici Rémy, je pense avoir une bonne nouvelle pour vous ! Une table est **actuellement disponible à la réservation** selon les critères que vous avez définis.\n▫️ Vous pouvez réserver cette table en vous rendant sur **l\'application Disneyland Paris**.\n▫️ Si vous avez réussi à **réserver cette table**, merci de me le faire savoir en **cliquant sur le bouton ci-dessous** !');
 
         embed.setFields([
             {
@@ -33,12 +34,12 @@ export async function subscribeBookNotifications() {
             },
             {
                 name: 'Date',
-                value: bookNotification.date,
+                value: normalizeDate(bookNotification.date),
                 inline: true,
             },
             {
                 name: 'Heure',
-                value: bookNotification.hour,
+                value: convertTime12to24(bookNotification.hour),
                 inline: true,
             },
             {

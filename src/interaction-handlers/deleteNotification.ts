@@ -3,6 +3,7 @@ import { ButtonInteraction, ButtonStyle, Colors, EmbedBuilder } from 'discord.js
 import { completeBookAlert, fetchBookAlertById } from '../core/bookAlerts';
 import { BookAlert } from '../typings/bookAlerts';
 import { normalizeDate } from '../core/utils';
+import Sentry from '@sentry/node';
 
 export class DeleteNotification extends InteractionHandler {
     public constructor(ctx) {
@@ -15,6 +16,7 @@ export class DeleteNotification extends InteractionHandler {
             bookAlert = await fetchBookAlertById(parseInt(bookAlertId));
         } catch (e) {
             console.error(e);
+            Sentry.captureException(e);
             await interaction.reply({
                 embeds: [
                     {
@@ -35,6 +37,7 @@ export class DeleteNotification extends InteractionHandler {
             await completeBookAlert(bookAlert.id);
         } catch (e) {
             console.error(e);
+            Sentry.captureException(e);
             await interaction.reply({
                 embeds: [
                     {

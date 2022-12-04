@@ -12,6 +12,7 @@ import { Restaurant } from '../typings/restaurants';
 import { fetchBookAlertById } from '../core/bookAlerts';
 import { BookAlert } from '../typings/bookAlerts';
 import { frenchMealPeriod, normalizeDate } from '../core/utils';
+import Sentry from '@sentry/node';
 
 export class ViewNotification extends InteractionHandler {
     public constructor(ctx) {
@@ -25,6 +26,7 @@ export class ViewNotification extends InteractionHandler {
             bookAlert = await fetchBookAlertById(parseInt(bookAlertId));
         } catch (e) {
             console.error(e);
+            Sentry.captureException(e);
             await interaction.reply({
                 embeds: [
                     {

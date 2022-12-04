@@ -3,6 +3,7 @@ import { ButtonInteraction, Colors, SelectMenuInteraction } from 'discord.js';
 import { createBookAlert } from '../core/bookAlerts';
 import { getNotificationDetails } from '../core/embeds';
 import { BookAlert } from '../typings/bookAlerts';
+import Sentry from '@sentry/node';
 
 export class ValidateNotification extends InteractionHandler {
     public constructor(ctx) {
@@ -26,6 +27,7 @@ export class ValidateNotification extends InteractionHandler {
             );
         } catch (e) {
             console.error(e);
+            Sentry.captureException(e);
             await interaction.reply({
                 embeds: [
                     {
