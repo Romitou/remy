@@ -8,6 +8,9 @@ import {
 } from 'discord.js';
 import { Restaurant, RestaurantAvailabilities } from '../typings/restaurants';
 import { fetchRestaurantAvailabilities, fetchRestaurantById } from '../core/restaurants';
+import moment from 'moment';
+
+moment.locale('fr');
 
 const breakfast = {
     label: 'Petit-déjeuner',
@@ -42,6 +45,11 @@ export class ChooseMealPeriod extends InteractionHandler {
             if (new Date().setFullYear(year, month-1, day) < Date.now()) {
                 isValidDate = false;
             }
+        }
+
+        if (isValidDate) {
+            const date = moment(rawDate, 'DD/MM/YYYY');
+            isValidDate = date.isValid();
         }
 
         if (!isValidDate) {
