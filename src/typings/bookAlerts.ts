@@ -16,9 +16,9 @@ export interface BookAlert {
 export interface BookNotification {
     bookAlertId: number;
     discordId: string;
-    restaurantName: string;
+    restaurant: Restaurant;
     date: string;
     mealPeriod: string;
     partyMix: number;
-    hour: string;
+    hours: string[];
 }

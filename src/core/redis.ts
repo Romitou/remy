@@ -24,31 +24,33 @@ export async function subscribeBookNotifications() {
         const embed = new EmbedBuilder()
             .setTitle(`📬 Nouvelle notification de réservation`)
             .setColor(Colors.Navy)
-            .setDescription('▫️ Ici Rémy, je pense avoir une bonne nouvelle pour vous ! Une table est **actuellement disponible à la réservation** selon les critères que vous avez définis.\n▫️ Vous pouvez réserver cette table en vous rendant sur **l\'application Disneyland Paris**.\n▫️ Si vous avez réussi à **réserver cette table**, merci de me le faire savoir en **cliquant sur le bouton ci-dessous** !');
+            .setImage(bookNotification.restaurant.imageUrl)
+            .setFooter({ text: `Alerte de disponibilité associée à votre notification n°${bookNotification.bookAlertId}` })
+            .setDescription('▫️ Ici Rémy, une table est **actuellement disponible à la réservation** selon les critères que vous avez définis.\n▫️ Vous pouvez réserver cette table en vous rendant sur **l\'application Disneyland Paris**.\n▫️ Si vous avez réussi à **réserver cette table**, merci de me le faire savoir en **cliquant sur le bouton ci-dessous** : j\'arrêterai de vous envoyer des notifications pour ce restaurant et ce repas !');
 
         embed.setFields([
             {
-                name: 'Restaurant',
-                value: bookNotification.restaurantName,
+                name: '🏢 Restaurant',
+                value: bookNotification.restaurant.name,
                 inline: true,
             },
             {
-                name: 'Date',
+                name: '📅 Date',
                 value: normalizeDate(bookNotification.date),
                 inline: true,
             },
             {
-                name: 'Heure',
-                value: convertTime12to24(bookNotification.hour),
+                name: '🕒 Heure(s)',
+                value: bookNotification.hours.map(convertTime12to24).join(', '),
                 inline: true,
             },
             {
-                name: 'Nombre de personnes',
+                name: '🍽️ Nombre de couverts',
                 value: bookNotification.partyMix + ' couverts',
                 inline: true,
             },
             {
-                name: 'Période de repas',
+                name: '😋 Période de repas',
                 value: frenchMealPeriod(bookNotification.mealPeriod),
                 inline: true,
             }
