@@ -1,16 +1,12 @@
 import { ActivityType } from 'discord.js';
 import { Statistics } from '../typings/core';
-import { ofetch } from 'ofetch';
 import { container } from '@sapphire/framework';
+import axios from 'axios';
+import { getAxiosClient } from '../core/axios';
 
 function fetchBookAlerts(): Promise<Statistics> {
-    return ofetch<Statistics>(`${process.env.BASE_API}/statistics`, {
-        method: 'GET',
-        parseResponse: JSON.parse,
-        headers: {
-            'Authorization': `Bearer ${process.env.WEBSERVER_TOKEN}`
-        }
-    });
+    return getAxiosClient().get<Statistics>('/statistics')
+        .then((response) => response.data);
 }
 
 let nextPresence = 0;

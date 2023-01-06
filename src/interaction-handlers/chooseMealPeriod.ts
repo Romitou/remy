@@ -91,12 +91,26 @@ export class ChooseMealPeriod extends InteractionHandler {
         const restaurant = await fetchRestaurantById(restaurantId);
 
         const parsedDate = rawDate.split('/').reverse().join('-');
+
         let availabilities: RestaurantAvailabilities[] = [];
         try {
             availabilities = await fetchRestaurantAvailabilities(parsedDate, restaurantId, parsedPartyMix);
         } catch (e) {
-            console.log(e);
-            console.log(e.data);
+            if (e.response.status >= 500) {
+                await interaction.followUp({
+                    embeds: [
+                        {
+                            title: '🛠 Oups, une erreur est survenue !',
+                            description: 'Les serveurs de Disney ont rencontré une erreur, je n\'ai pas pu récupérer les disponibilités pour ce restaurant. Je vous invite à réessayer d\'ici quelques minutes.',
+                            color: Colors.Orange,
+                            image: {
+                                url: 'https://s3-01.romitou.fr/disneytables/error.png'
+                            }
+                        }
+                    ],
+                })
+            }
+            return;
         }
 
         const selectMenu = new SelectMenuBuilder()

@@ -4,11 +4,11 @@
   "dependencies": {
     "@sapphire/framework": "^3.2.0-pr-512.244de39.0",
     "@sentry/node": "^7.23.0",
+    "axios": "^1.2.1",
     "discord.js": "^14.7.1",
     "dotenv": "^16.0.3",
     "moment": "^2.29.4",
     "node-cron": "^3.0.2",
-    "ofetch": "^1.0.0",
     "redis": "^4.5.1"
   },
   "scripts": {

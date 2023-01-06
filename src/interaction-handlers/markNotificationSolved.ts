@@ -1,5 +1,5 @@
 import { InteractionHandler, InteractionHandlerTypes } from '@sapphire/framework';
-import { ButtonInteraction, Colors, EmbedBuilder } from 'discord.js';
+import { ButtonInteraction, Colors, EmbedBuilder, TextChannel } from 'discord.js';
 import { completeBookAlert } from '../core/bookAlerts';
 import Sentry from '@sentry/node';
 
@@ -39,11 +39,21 @@ export class MarkNotificationSolved extends InteractionHandler {
                 text: 'Cette notification a été marquée comme réservée. ✅',
             });
 
-        await interaction.update({
+        const channel = await interaction.client.channels.fetch(interaction.channelId);
+        const message = await (channel as TextChannel).messages.fetch(interaction.message.id);
+        await message.edit({
             embeds: [newEmbed],
-            components: [],
-        });
+        })
 
+        await interaction.reply({
+            embeds: [
+                {
+                    title: 'Mon travail est terminé pour cette notification !',
+                    description: `Cette notification a été marquée comme réservée et aucune nouvelle notification à propos de cette notification ne vous sera envoyée. Si vous avez apprécié ce service ou si vous avez quelconque commentaire à nous faire part, n'hésitez pas à faire un tour dans le salon <#${process.env.FEEDBACK_CHANNEL_ID}> !`,
+                    color: Colors.DarkGreen,
+                }
+            ]
+        })
     }
 
     public parse(interaction: ButtonInteraction) {

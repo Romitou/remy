@@ -1,16 +1,12 @@
 import { DailyReport, Statistics } from '../typings/core';
-import { ofetch } from 'ofetch';
 import { container } from '@sapphire/framework';
 import { ActivityType, Colors, EmbedBuilder } from 'discord.js';
+import axios from 'axios';
+import { getAxiosClient } from '../core/axios';
 
 function getDailyReport(): Promise<DailyReport> {
-    return ofetch<DailyReport>(`${process.env.BASE_API}/dailyReport`, {
-        method: 'GET',
-        parseResponse: JSON.parse,
-        headers: {
-            'Authorization': `Bearer ${process.env.WEBSERVER_TOKEN}`
-        }
-    });
+    return getAxiosClient().get<DailyReport>('/dailyReport')
+        .then((response) => response.data);
 }
 
 export default async function sendDailyReport() {

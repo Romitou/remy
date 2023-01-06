@@ -1,31 +1,20 @@
-import { ofetch } from 'ofetch';
 import { BookAlert } from '../typings/bookAlerts';
+import axios from 'axios';
+import { getAxiosClient } from './axios';
 
 export async function createBookAlert(restaurantDisneyId: string, mealPeriod: string, date: string, partyMix: number, discordId: string): Promise<BookAlert> {
-    return await ofetch<BookAlert>(`${process.env.BASE_API}/bookAlerts`, {
-        method: 'POST',
-        body: {
-            restaurantDisneyId,
-            discordId,
-            mealPeriod,
-            date,
-            partyMix,
-        },
-        parseResponse: JSON.parse,
-        headers: {
-            'Authorization': `Bearer ${process.env.WEBSERVER_TOKEN}`
-        }
-    });
+    return await getAxiosClient().post<BookAlert>('/bookAlerts', {
+        restaurantDisneyId,
+        discordId,
+        mealPeriod,
+        date,
+        partyMix,
+    }).then((response) => response.data);
 }
 
 export async function fetchBookAlerts(): Promise<BookAlert[]> {
-    return await ofetch<BookAlert[]>(`${process.env.BASE_API}/bookAlerts`, {
-        method: 'GET',
-        parseResponse: JSON.parse,
-        headers: {
-            'Authorization': `Bearer ${process.env.WEBSERVER_TOKEN}`
-        }
-    });
+    return await getAxiosClient().get<BookAlert[]>('/bookAlerts')
+        .then((response) => response.data);
 }
 
 export async function fetchActiveBookAlertsForUser(discordId: string): Promise<BookAlert[]> {
@@ -39,14 +28,6 @@ export async function fetchBookAlertById(id: number): Promise<BookAlert> {
 }
 
 export async function completeBookAlert(id: number): Promise<BookAlert> {
-    return await ofetch<BookAlert>(`${process.env.BASE_API}/completeBookAlert`, {
-        method: 'POST',
-        body: {
-            id,
-        },
-        parseResponse: JSON.parse,
-        headers: {
-            'Authorization': `Bearer ${process.env.WEBSERVER_TOKEN}`
-        }
-    });
+    return await getAxiosClient().post<BookAlert>('/completeBookAlert', { id })
+        .then((response) => response.data);
 }
