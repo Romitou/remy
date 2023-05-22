@@ -1,10 +1,9 @@
 import { DailyReport, Statistics } from '../typings/core';
 import { container } from '@sapphire/framework';
 import { ActivityType, Colors, EmbedBuilder } from 'discord.js';
-import axios from 'axios';
 import { getAxiosClient } from '../core/axios';
 
-function getDailyReport(): Promise<DailyReport> {
+export function getDailyReport(): Promise<DailyReport> {
     return getAxiosClient().get<DailyReport>('/dailyReport')
         .then((response) => response.data);
 }
