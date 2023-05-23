@@ -1,5 +1,5 @@
 import { container } from '@sapphire/framework';
-import { BaseGuildTextChannel, Embed, Message } from 'discord.js';
+import { ActionRowBuilder, BaseGuildTextChannel, ButtonBuilder, ButtonStyle, Embed, Message } from 'discord.js';
 import { DailyReport } from '../typings/core';
 import { getDailyReport } from './sendDailyReport';
 
@@ -28,14 +28,30 @@ export default async function updateOnboarding() {
         return;
     }
 
+    const componentRow = new ActionRowBuilder<ButtonBuilder>()
+        .addComponents(
+            new ButtonBuilder()
+                .setCustomId('startAlertBook')
+                .setLabel('Enregistrer une notification')
+                .setStyle(ButtonStyle.Success)
+                .setEmoji('📬'),
+            new ButtonBuilder()
+                .setCustomId('myNotifications')
+                .setLabel('Mes notifications')
+                .setStyle(ButtonStyle.Primary)
+                .setEmoji('📘')
+        );
+    const components = [componentRow];
+
+
     const embeds = [createOnboardingEmbed(dailyReport)]
     if (!message) {
-        message = await onboardingChannel.send({ embeds });
+        message = await onboardingChannel.send({ embeds, components });
         messageId = message.id;
         return;
     }
 
-    await message.edit({ embeds });
+    await message.edit({ embeds, components });
 }
 
 function createOnboardingEmbed(dailyReport: DailyReport): Embed {
