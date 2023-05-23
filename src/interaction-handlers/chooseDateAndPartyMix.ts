@@ -33,7 +33,6 @@ export class ChooseDateAndPartyMix extends InteractionHandler {
             .setCustomId('partyMix')
             .setLabel('Nombre de couverts (1 à 10) 👪')
             .setStyle(TextInputStyle.Short)
-            .setPlaceholder('2')
             .setMinLength(1)
             .setMaxLength(2);
 

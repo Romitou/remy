@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { ButtonStyle, IntentsBitField, TextInputStyle } from 'discord.js';
+import { IntentsBitField } from 'discord.js';
 import { SapphireClient } from '@sapphire/framework';
 import { subscribeBookNotifications } from './core/redis';
 import { init } from '@sentry/node';
@@ -7,6 +7,7 @@ import { schedule } from 'node-cron';
 import updatePresence from './tasks/updatePresence';
 import sendDailyReport from './tasks/sendDailyReport';
 import { createAxiosClient } from './core/axios';
+import updateOnboarding from './tasks/updateOnboarding';
 
 async function start() {
     init({
@@ -22,7 +23,8 @@ async function start() {
 
     schedule('* * * * *', updatePresence);
     schedule('0 0 * * *', sendDailyReport);
+    schedule('*/5 * * * *', updateOnboarding);
     await subscribeBookNotifications();
 }
 
-start();
+void start();

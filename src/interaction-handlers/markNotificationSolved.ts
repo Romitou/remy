@@ -43,6 +43,7 @@ export class MarkNotificationSolved extends InteractionHandler {
         const message = await (channel as TextChannel).messages.fetch(interaction.message.id);
         await message.edit({
             embeds: [newEmbed],
+            components: [],
         })
 
         await interaction.reply({

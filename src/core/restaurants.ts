@@ -1,4 +1,4 @@
-import axios from 'axios';
+import { AxiosResponse } from 'axios';
 import { Restaurant, RestaurantAvailabilities } from '../typings/restaurants';
 import { getAxiosClient } from './axios';
 
@@ -8,8 +8,9 @@ let cachedRestaurants: Restaurant[] = [];
 export async function fetchRestaurants(): Promise<Restaurant[]> {
     if (!cacheDate || (cacheDate.getTime() < Date.now() - 1000 * 60 * 60)) {
         cacheDate = new Date();
-        cachedRestaurants = await getAxiosClient().get<Restaurant[]>('/restaurants')
-            .then((response) => response.data);
+        const restaurants = await getAxiosClient().get<Restaurant[]>('/restaurants')
+            .then((response: AxiosResponse<Restaurant[]>) => response.data);
+        cachedRestaurants = restaurants.filter((restaurant) => restaurant?.displayed);
     }
     return cachedRestaurants;
 }
