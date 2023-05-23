@@ -3,6 +3,7 @@ export interface Restaurant {
     disneyId: string;
     name: string;
     imageUrl: string;
+    displayed: boolean;
 }
 
 export interface RestaurantAvailabilities {
