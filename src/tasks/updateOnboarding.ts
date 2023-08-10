@@ -64,7 +64,7 @@ function createOnboardingEmbed(dailyReport: DailyReport): Embed {
         fields: [
             {
                 name: '📝 Fonctionnement',
-                value: `Vous cherchez réserver une table dans un des restaurants de Disneyland Paris ? Recevez une notification dès lorsque les restaurants de votre choix libèrent une table à la date de votre visite !`,
+                value: `Vous cherchez à réserver une table dans un des restaurants de Disneyland Paris ? Recevez une notification dès lorsque les restaurants de votre choix libèrent une table aux dates de vos prochaines visites !`,
             },
             {
                 name: '🕓 Intervalle de vérification',
@@ -72,7 +72,7 @@ function createOnboardingEmbed(dailyReport: DailyReport): Embed {
             },
         ],
         footer: {
-            text: 'Créé et développé par Romitou pour Disneyland Paris - Notifications et entraides',
+            text: 'Créé et développé par Romitou pour DLP HELP - Notifications et entraides',
         },
     } as Embed;
 }

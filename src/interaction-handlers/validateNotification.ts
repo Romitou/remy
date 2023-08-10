@@ -61,7 +61,7 @@ export class ValidateNotification extends InteractionHandler {
             embeds: [
                 {
                     title: '✅ Votre notification a bien été enregistrée !',
-                    description: `Je me chargerai personnellement de vérifier régulièrement si le restaurant **${bookAlert.restaurant.name}** propose des tables pour y **${eatingVerb}** le **${notificationDetails.date}** pour **${notificationDetails.partyMix}** couverts.\n\nSi je trouve une disponibilité, comptez sur moi pour vous en informer en vous en envoyant immédiatement un message privé !\n\nVous pouvez à tout moment gérer vos notifications en cliquant sur le bouton *Mes notifications* du message en haut du salon.`,
+                    description: `Je me chargerai personnellement de vérifier régulièrement si le restaurant **${bookAlert.restaurant.name}** propose des tables pour y **${eatingVerb}** le **${notificationDetails.date}** pour **${notificationDetails.partyMix}** couverts. Si je trouve une disponibilité, comptez sur moi pour vous en informer en vous en envoyant immédiatement un message privé ! Vous pouvez à tout moment gérer vos notifications en cliquant sur le bouton *Mes notifications* du message en haut du salon.`,
                     color: Colors.Green,
                     image: {
                         url: 'https://s3-01.romitou.fr/disneytables/notificationCreated.jpg'
