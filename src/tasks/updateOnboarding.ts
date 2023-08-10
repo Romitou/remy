@@ -64,7 +64,7 @@ function createOnboardingEmbed(dailyReport: DailyReport): Embed {
         fields: [
             {
                 name: '📝 Fonctionnement',
-                value: `:white_small_square: Grâce à moi, **activez dès maintenant vos notifications de disponibilité pour les restaurants** des parcs et hôtels de Disneyland Paris.\n:white_small_square: Je me chargerai de **vérifier périodiquement si une table est disponible** dans le restaurant de votre choix selon votre période de repas, votre date de visite et votre nombre de couverts.\n:white_small_square: Dès qu'une table sera disponible, **je vous enverrai une notification en message privé** ! Il ne vous restera plus qu'à vous rendre sur l'application Disneyland Paris et **réserver votre table**.\nㅤ`,
+                value: `Vous cherchez réserver une table dans un des restaurants de Disneyland Paris ? Recevez une notification dès lorsque les restaurants de votre choix libèrent une table à la date de votre visite !`,
             },
             {
                 name: '🕓 Intervalle de vérification',
