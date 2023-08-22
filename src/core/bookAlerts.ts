@@ -18,13 +18,13 @@ export async function fetchBookAlerts(): Promise<RestaurantAlert[]> {
 }
 
 export async function fetchActiveBookAlertsForUser(discordId: string): Promise<RestaurantAlert[]> {
-    const bookAlerts = await fetchBookAlerts();
-    return bookAlerts.filter(bookAlert => bookAlert.discordId === discordId && !bookAlert.completed);
+    return await getAxiosClient().get('/discord-alerts?discordId='+discordId)
+      .then((response) => response.data);
 }
 
 export async function fetchBookAlertById(id: number): Promise<RestaurantAlert> {
-    const bookAlerts = await fetchBookAlerts();
-    return bookAlerts.find(bookAlert => bookAlert.id === id);
+    return await getAxiosClient().get('/discord-alert?id='+id)
+      .then((response) => response.data);
 }
 
 export async function completeBookAlert(id: number): Promise<RestaurantAlert> {
