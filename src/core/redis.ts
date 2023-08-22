@@ -16,7 +16,7 @@ export async function subscribeBookNotifications() {
         console.error(e);
     }
 
-    await client.subscribe('book-notifications', async (message) => {
+    await client.subscribe('restaurant-notifications', async (message) => {
         const bookNotification: BookNotification = JSON.parse(message);
 
         const user = await container.client.users.fetch(bookNotification.discordId);
