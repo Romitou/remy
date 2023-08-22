@@ -6,7 +6,7 @@ export function createAxiosClient() {
     axiosClient = axios.create({
         baseURL: process.env.BASE_API,
         headers: {
-            'Authorization': `Bearer ${process.env.WEBSERVER_TOKEN}`,
+            'Authorization': `${process.env.WEBSERVER_TOKEN}`,
             'Accept-Encoding': 'gzip,deflate,compress',
         },
     });
