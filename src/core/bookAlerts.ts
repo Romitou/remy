@@ -3,7 +3,7 @@ import axios from 'axios';
 import { getAxiosClient } from './axios';
 
 export async function createBookAlert(restaurantIds: number[], mealPeriod: string, date: string, partyMix: number, discordId: string): Promise<RestaurantAlert> {
-    return await getAxiosClient().post('/bookAlerts', {
+    return await getAxiosClient().post('/discord-alerts', {
         restaurantIds,
         discordId,
         mealPeriod,
@@ -13,7 +13,7 @@ export async function createBookAlert(restaurantIds: number[], mealPeriod: strin
 }
 
 export async function fetchBookAlerts(): Promise<RestaurantAlert[]> {
-    return await getAxiosClient().get('/bookAlerts')
+    return await getAxiosClient().get('/discord-alerts')
         .then((response) => response.data);
 }
 
@@ -28,6 +28,6 @@ export async function fetchBookAlertById(id: number): Promise<RestaurantAlert> {
 }
 
 export async function completeBookAlert(id: number): Promise<RestaurantAlert> {
-    return await getAxiosClient().post('/completeBookAlert', { id })
+    return await getAxiosClient().get('/complete-alert?id=' + id)
         .then((response) => response.data);
 }
