@@ -1,9 +1,10 @@
 import { InteractionHandler, InteractionHandlerTypes } from '@sapphire/framework';
 import { ButtonInteraction, ButtonStyle, Colors, EmbedBuilder } from 'discord.js';
 import { completeBookAlert, fetchBookAlertById } from '../core/bookAlerts';
-import { BookAlert } from '../typings/bookAlerts';
+import { RestaurantAlert } from '../typings/bookAlerts';
 import { normalizeDate } from '../core/utils';
 import Sentry from '@sentry/node';
+import { fetchRestaurantById } from '../core/restaurants';
 
 export class DeleteNotification extends InteractionHandler {
     public constructor(ctx) {
@@ -11,7 +12,7 @@ export class DeleteNotification extends InteractionHandler {
     }
 
     public async run(interaction: ButtonInteraction, bookAlertId: string) {
-        let bookAlert: BookAlert;
+        let bookAlert: RestaurantAlert;
         try {
             bookAlert = await fetchBookAlertById(parseInt(bookAlertId));
         } catch (e) {
@@ -54,9 +55,10 @@ export class DeleteNotification extends InteractionHandler {
             return;
         }
 
+        const restaurant = await fetchRestaurantById(bookAlert.checks[0].restaurantId)
         const embed = new EmbedBuilder()
             .setTitle(`Votre notification a bien été supprimée 📬`)
-            .setDescription('La notification pour le restaurant **' + bookAlert.restaurant.name + '**, le ' + normalizeDate(bookAlert.date) + ' a bien été supprimée. Vous ne recevrez plus de mes notifications pour ce restaurant et ce repas.')
+            .setDescription('La notification pour le restaurant **' + restaurant.name + '**, le ' + normalizeDate(bookAlert.date) + ' a bien été supprimée. Vous ne recevrez plus de mes notifications pour ce restaurant et ce repas.')
             .setColor(Colors.Red);
 
         await interaction.update({

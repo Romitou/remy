@@ -15,11 +15,11 @@ export class ChooseDateAndPartyMix extends InteractionHandler {
     }
 
     public async run(interaction: SelectMenuInteraction) {
-        const restaurantDisneyId = interaction.values[0];
+        const restaurantId = interaction.values[0];
 
         const modal = new ModalBuilder()
             .setTitle('Indiquez votre date et vos couverts')
-            .setCustomId('chooseMealPeriod-' + restaurantDisneyId)
+            .setCustomId('chooseMealPeriod-' + restaurantId)
 
         const dateInput = new TextInputBuilder()
             .setCustomId('date')

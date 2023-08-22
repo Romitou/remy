@@ -1,20 +1,30 @@
 import { Restaurant } from './restaurants';
 
-export interface BookAlert {
+export interface RestaurantAlert {
     id: number;
-    restaurant: Restaurant;
-    restaurantId: string;
+    checks: RestaurantCheck[];
     discordId: string;
     date: string;
-    mealPeriod: 'breakfast' | 'lunch' | 'dinner';
+    mealPeriod: 'BREAKFAST' | 'LUNCH' | 'DINNER';
     partyMix: number;
     completed: boolean;
     createdAt: string;
     updatedAt: string;
 }
 
+export interface RestaurantCheck {
+    id: number;
+    alertId: number;
+    restaurantId: number;
+    checkedAt: string;
+    checkCount: number;
+    errorCount: number;
+    createdAt: string;
+    updatedAt: string;
+}
+
 export interface BookNotification {
-    bookAlertId: number;
+    alertId: number;
     discordId: string;
     restaurant: Restaurant;
     date: string;

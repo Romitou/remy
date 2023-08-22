@@ -25,7 +25,7 @@ export async function subscribeBookNotifications() {
             .setTitle(`📬 Nouvelle notification de réservation`)
             .setColor(Colors.Navy)
             .setImage(bookNotification.restaurant.imageUrl)
-            .setFooter({ text: `Alerte de disponibilité associée à votre notification n°${bookNotification.bookAlertId}` })
+            .setFooter({ text: `Alerte de disponibilité associée à votre notification n°${bookNotification.alertId}` })
             .setDescription('Hey, ici Rémy ! Une table est **actuellement disponible à la réservation** selon les critères que vous avez définis, sur l\'application Disneyland Paris.');
 
         embed.setFields([
@@ -59,7 +59,7 @@ export async function subscribeBookNotifications() {
         const componentRow = new ActionRowBuilder<ButtonBuilder>()
             .addComponents(
                 new ButtonBuilder()
-                    .setCustomId(`markNotificationSolved-${bookNotification.bookAlertId}`)
+                    .setCustomId(`markNotificationSolved-${bookNotification.alertId}`)
                     .setLabel('Marquer comme réservé')
                     .setStyle(ButtonStyle.Success)
                     .setEmoji('✅')

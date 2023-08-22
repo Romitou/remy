@@ -1,7 +1,7 @@
 import { InteractionHandler, InteractionHandlerTypes } from '@sapphire/framework';
 import { ActionRowBuilder, ButtonInteraction, Colors, SelectMenuBuilder, SelectMenuInteraction } from 'discord.js';
 import { Restaurant } from '../typings/restaurants';
-import { fetchRestaurantById } from '../core/restaurants';
+import { fetchRestaurantByDisneyId } from '../core/restaurants';
 
 export class ChooseRestaurant extends InteractionHandler {
     public constructor(ctx) {
@@ -10,7 +10,7 @@ export class ChooseRestaurant extends InteractionHandler {
 
     public async run(interaction: SelectMenuInteraction) {
         const restaurantDisneyId = interaction.values[0];
-        const restaurant = await fetchRestaurantById(restaurantDisneyId);
+        const restaurant = await fetchRestaurantByDisneyId(restaurantDisneyId);
 
         const componentRow = new ActionRowBuilder<SelectMenuBuilder>()
             .addComponents(

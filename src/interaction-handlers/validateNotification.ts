@@ -2,8 +2,9 @@ import { InteractionHandler, InteractionHandlerTypes } from '@sapphire/framework
 import { ButtonInteraction, Colors, SelectMenuInteraction } from 'discord.js';
 import { createBookAlert } from '../core/bookAlerts';
 import { getNotificationDetails } from '../core/embeds';
-import { BookAlert } from '../typings/bookAlerts';
+import { RestaurantAlert } from '../typings/bookAlerts';
 import Sentry from '@sentry/node';
+import { fetchRestaurantById } from '../core/restaurants';
 
 export class ValidateNotification extends InteractionHandler {
     public constructor(ctx) {
@@ -15,15 +16,15 @@ export class ValidateNotification extends InteractionHandler {
 
         const notificationDetails = await getNotificationDetails(interaction.message.embeds[0]);
 
-        let bookAlert: BookAlert;
+        let bookAlert: RestaurantAlert;
         try {
             const parsedDate = notificationDetails.date.split('/').reverse().join('-');
             bookAlert = await createBookAlert(
-                notificationDetails.restaurantId,
+                [notificationDetails.restaurantId],
                 mealPeriod,
                 parsedDate,
                 notificationDetails.partyMix,
-                interaction.user.id
+                String(interaction.user.id)
             );
         } catch (e) {
             console.error(e);
@@ -46,22 +47,23 @@ export class ValidateNotification extends InteractionHandler {
 
         let eatingVerb;
         switch (bookAlert.mealPeriod) {
-            case 'breakfast':
+            case 'BREAKFAST':
                 eatingVerb = 'petit-déjeuner';
                 break;
-            case 'lunch':
+            case 'LUNCH':
                 eatingVerb = 'déjeuner';
                 break;
-            case 'dinner':
+            case 'DINNER':
                 eatingVerb = 'dîner';
                 break;
         }
 
+        const restaurant = await fetchRestaurantById(bookAlert.checks[0].restaurantId);
         await interaction.update({
             embeds: [
                 {
                     title: '✅ Votre notification a bien été enregistrée !',
-                    description: `Je me chargerai personnellement de vérifier régulièrement si le restaurant **${bookAlert.restaurant.name}** propose des tables pour y **${eatingVerb}** le **${notificationDetails.date}** pour **${notificationDetails.partyMix}** couverts. Si je trouve une disponibilité, comptez sur moi pour vous en informer en vous en envoyant immédiatement un message privé ! Vous pouvez à tout moment gérer vos notifications en cliquant sur le bouton *Mes notifications* du message en haut du salon.`,
+                    description: `Je me chargerai personnellement de vérifier régulièrement si le restaurant **${restaurant.name}** propose des tables pour y **${eatingVerb}** le **${notificationDetails.date}** pour **${notificationDetails.partyMix}** couverts. Si je trouve une disponibilité, comptez sur moi pour vous en informer en vous en envoyant immédiatement un message privé ! Vous pouvez à tout moment gérer vos notifications en cliquant sur le bouton *Mes notifications* du message en haut du salon.`,
                     color: Colors.Green,
                     image: {
                         url: 'https://s3-01.romitou.fr/disneytables/notificationCreated.jpg'

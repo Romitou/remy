@@ -8,9 +8,10 @@ import {
     StringSelectMenuBuilder
 } from 'discord.js';
 import { fetchActiveBookAlertsForUser } from '../core/bookAlerts';
-import { BookAlert } from '../typings/bookAlerts';
+import { RestaurantAlert } from '../typings/bookAlerts';
 import { frenchMealPeriod, normalizeDate } from '../core/utils';
 import { captureException } from '@sentry/node';
+import { fetchRestaurantById } from '../core/restaurants';
 
 
 export class MyNotifications extends InteractionHandler {
@@ -19,9 +20,9 @@ export class MyNotifications extends InteractionHandler {
     }
 
     public async run(interaction: ButtonInteraction) {
-        let bookAlerts: BookAlert[];
+        let bookAlerts: RestaurantAlert[];
         try {
-            bookAlerts = await fetchActiveBookAlertsForUser(interaction.user.id);
+            bookAlerts = await fetchActiveBookAlertsForUser(String(interaction.user.id));
         } catch (e) {
             console.error(e);
             captureException(e);
@@ -54,28 +55,33 @@ export class MyNotifications extends InteractionHandler {
             return;
         } else {
             embed.setDescription("Voici la liste de vos notifications actives. Afin de supprimer une de vos notifications, sélectionnez-la simplement dans le menu déroulant ci-dessous.");
-            bookAlerts.forEach((bookAlert) => {
-                return embed.addFields({
+            for (const bookAlert of bookAlerts) {
+                const restaurant = await fetchRestaurantById(bookAlert.checks[0].restaurantId);
+                embed.addFields({
                     name: `Notification n° ${bookAlert.id}`,
-                    value: `▫️ ${normalizeDate(bookAlert.date)}\n▫️ ${bookAlert.restaurant.name}\n▫️ ${bookAlert.partyMix} couverts\n▫️ ${frenchMealPeriod(bookAlert.mealPeriod)}`,
+                    value: `▫️ ${normalizeDate(bookAlert.date)}\n▫️ ${restaurant.name}\n▫️ ${bookAlert.partyMix} couverts\n▫️ ${frenchMealPeriod(bookAlert.mealPeriod)}`,
                     inline: true,
                 });
-            })
+            }
+        }
+
+        const menuBuilder =  new StringSelectMenuBuilder()
+          .setCustomId('viewNotification')
+          .setPlaceholder('Sélectionnez une notification à supprimer');
+
+        for (const bookAlert of bookAlerts) {
+            const restaurant = await fetchRestaurantById(bookAlert.checks[0].restaurantId);
+            menuBuilder.addOptions(
+                {
+                    label: 'Supprimer la notification n°' + bookAlert.id,
+                    description: `📅 ${normalizeDate(bookAlert.date)} - 🍽 ${frenchMealPeriod(bookAlert.mealPeriod)} - 🏢 ${restaurant.name}`,
+                    value: String(bookAlert.id),
+                }
+            );
         }
 
         const componentRow = new ActionRowBuilder<SelectMenuBuilder>()
-            .addComponents(
-                new StringSelectMenuBuilder()
-                    .setCustomId('viewNotification')
-                    .setPlaceholder('Sélectionnez une notification à supprimer')
-                    .setOptions(
-                        bookAlerts.map((bookAlert) => ({
-                            label: 'Supprimer la notification n°' + bookAlert.id,
-                            description: `📅 ${normalizeDate(bookAlert.date)} - 🍽 ${frenchMealPeriod(bookAlert.mealPeriod)} - 🏢 ${bookAlert.restaurant.name}`,
-                            value: String(bookAlert.id),
-                        }))
-                    )
-            );
+            .addComponents(menuBuilder);
 
         await interaction.reply({
             embeds: [embed],

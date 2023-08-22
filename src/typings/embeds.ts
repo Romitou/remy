@@ -1,5 +1,5 @@
 export interface NotificationDetails {
-    restaurantId: string;
+    restaurantId: number;
     mealPeriod: 'Breakfast' | 'Lunch' | 'Dinner';
     date: string;
     partyMix: number;
