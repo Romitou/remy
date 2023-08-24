@@ -27,7 +27,6 @@ export default async function updateOnboarding() {
     } catch (e) {
         console.error(e);
         maintenanceMode = true;
-        return;
     }
 
     const componentRow = new ActionRowBuilder<ButtonBuilder>()
