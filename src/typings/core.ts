@@ -1,7 +1,6 @@
 export interface Statistics {
-    bookAlertsCount: number;
-    bookSlotsCount: number;
-    sentNotificationsCount: number;
+    alerts: number;
+    slots: number;
 }
 
 export interface DailyReport {

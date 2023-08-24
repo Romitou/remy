@@ -10,9 +10,10 @@ import {
 } from 'discord.js';
 import { Restaurant } from '../typings/restaurants';
 import { fetchBookAlertById } from '../core/bookAlerts';
-import { BookAlert } from '../typings/bookAlerts';
+import { RestaurantAlert } from '../typings/bookAlerts';
 import { frenchMealPeriod, normalizeDate } from '../core/utils';
 import Sentry from '@sentry/node';
+import { fetchRestaurantById } from '../core/restaurants';
 
 export class ViewNotification extends InteractionHandler {
     public constructor(ctx) {
@@ -21,7 +22,7 @@ export class ViewNotification extends InteractionHandler {
 
     public async run(interaction: SelectMenuInteraction) {
         const bookAlertId = interaction.values[0];
-        let bookAlert: BookAlert;
+        let bookAlert: RestaurantAlert;
         try {
             bookAlert = await fetchBookAlertById(parseInt(bookAlertId));
         } catch (e) {
@@ -48,12 +49,13 @@ export class ViewNotification extends InteractionHandler {
             .setDescription('Vous êtes sur le point de supprimer cette notification. Après cela, vous ne recevrez plus de notifications pour ce restaurant et ce repas. Si vous souhaitez continuer, cliquez sur le bouton ci-dessous.')
             .setColor(Colors.Red);
 
+        const restaurant = await fetchRestaurantById(bookAlert.checks[0].restaurantId);
         embed.setFields([
             {
                 name: 'Restaurant',
-                value: bookAlert.restaurant.name,
+                value: restaurant.name,
                 inline: true
-},
+            },
             {
                 name: 'Date',
                 value: normalizeDate(bookAlert.date),

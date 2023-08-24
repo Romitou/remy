@@ -13,7 +13,7 @@ export async function getNotificationDetails(embed: Embed): Promise<Notification
         switch (field.name) {
             case 'Restaurant':
                 const restaurant = await fetchRestaurantByName(field.value)
-                notificationDetails.restaurantId = restaurant.disneyId;
+                notificationDetails.restaurantId = restaurant.id;
                 break;
             case 'Date de visite':
                 notificationDetails.date = field.value;

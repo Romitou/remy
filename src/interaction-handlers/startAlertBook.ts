@@ -41,7 +41,7 @@ export class StartAlertBook extends InteractionHandler {
                         restaurants.map((restaurant: Restaurant) => {
                             return {
                                 label: restaurant.name,
-                                value: restaurant.disneyId,
+                                value: String(restaurant.id),
                             };
                         })
                     )

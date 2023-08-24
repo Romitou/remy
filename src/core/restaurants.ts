@@ -10,18 +10,23 @@ export async function fetchRestaurants(): Promise<Restaurant[]> {
         cacheDate = new Date();
         const restaurants = await getAxiosClient().get<Restaurant[]>('/restaurants')
             .then((response: AxiosResponse<Restaurant[]>) => response.data);
-        cachedRestaurants = restaurants.filter((restaurant) => restaurant?.displayed);
+        cachedRestaurants = restaurants;
     }
     return cachedRestaurants;
 }
 
-export async function fetchRestaurantById(disneyId: string): Promise<Restaurant> {
+export async function fetchRestaurantById(id: number): Promise<Restaurant> {
+    const restaurants = await fetchRestaurants();
+    return restaurants.find((restaurant) => restaurant.id === id);
+}
+
+export async function fetchRestaurantByDisneyId(disneyId: string): Promise<Restaurant> {
     const restaurants = await fetchRestaurants();
     return restaurants.find((restaurant) => restaurant.disneyId === disneyId);
 }
 
-export async function fetchRestaurantAvailabilities(date: string, restaurantId: string, partyMix: number) {
-    return await getAxiosClient().post<RestaurantAvailabilities[]>('/restaurantAvailabilities', {
+export async function fetchRestaurantAvailabilities(date: string, restaurantId: number, partyMix: number): Promise<RestaurantAvailabilities[]> {
+    return await getAxiosClient().post('/availabilities', {
         date,
         restaurantId,
         partyMix,

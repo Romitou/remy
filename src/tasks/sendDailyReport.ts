@@ -4,7 +4,7 @@ import { ActivityType, Colors, EmbedBuilder } from 'discord.js';
 import { getAxiosClient } from '../core/axios';
 
 export function getDailyReport(): Promise<DailyReport> {
-    return getAxiosClient().get<DailyReport>('/dailyReport')
+    return getAxiosClient().get<DailyReport>('/daily-report')
         .then((response) => response.data);
 }
 

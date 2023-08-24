@@ -7,26 +7,26 @@ import {
     SelectMenuBuilder
 } from 'discord.js';
 import { Restaurant, RestaurantAvailabilities } from '../typings/restaurants';
-import { fetchRestaurantAvailabilities, fetchRestaurantById } from '../core/restaurants';
+import { fetchRestaurantAvailabilities, fetchRestaurantByDisneyId, fetchRestaurantById } from '../core/restaurants';
 import moment from 'moment';
 
 moment.locale('fr');
 
 const breakfast = {
     label: 'Petit-déjeuner',
-    value: 'breakfast',
+    value: 'BREAKFAST',
     emoji: '🥐',
 };
 
 const lunch = {
     label: 'Déjeuner',
-    value: 'lunch',
+    value: 'LUNCH',
     emoji: '🍔',
 };
 
 const dinner = {
     label: 'Dîner',
-    value: 'dinner',
+    value: 'DINNER',
     emoji: '🍝',
 }
 
@@ -35,7 +35,7 @@ export class ChooseMealPeriod extends InteractionHandler {
         super(ctx, { interactionHandlerType: InteractionHandlerTypes.ModalSubmit });
     }
 
-    public async run(interaction: ModalSubmitInteraction, restaurantId: string) {
+    public async run(interaction: ModalSubmitInteraction, restaurantId: number) {
         await interaction.deferReply({ ephemeral: true });
 
         const rawDate = interaction.fields.getTextInputValue('date');
@@ -181,6 +181,7 @@ export class ChooseMealPeriod extends InteractionHandler {
     public parse(interaction: ButtonInteraction) {
         if (!(interaction.customId.startsWith('chooseMealPeriod-'))) return this.none();
         const restaurantId = interaction.customId.split('-')[1];
-        return this.some(restaurantId);
+        const parsedInt = parseInt(restaurantId);
+        return this.some(parsedInt);
     }
 }
