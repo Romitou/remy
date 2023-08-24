@@ -20,11 +20,13 @@ export default async function updateOnboarding() {
         message = await onboardingChannel.messages.fetch(messageId);
     }
 
+    let maintenanceMode = false;
     let dailyReport: DailyReport;
     try {
         dailyReport = await getDailyReport();
     } catch (e) {
         console.error(e);
+        maintenanceMode = true;
         return;
     }
 
@@ -34,6 +36,7 @@ export default async function updateOnboarding() {
                 .setCustomId('startAlertBook')
                 .setLabel('Enregistrer une notification')
                 .setStyle(ButtonStyle.Success)
+                .setDisabled(maintenanceMode)
                 .setEmoji('📬'),
             new ButtonBuilder()
                 .setCustomId('myNotifications')
@@ -44,7 +47,7 @@ export default async function updateOnboarding() {
     const components = [componentRow];
 
 
-    const embeds = [createOnboardingEmbed(dailyReport)]
+    const embeds = [createOnboardingEmbed(dailyReport, maintenanceMode)]
     if (!message) {
         message = await onboardingChannel.send({ embeds, components });
         messageId = message.id;
@@ -54,7 +57,8 @@ export default async function updateOnboarding() {
     await message.edit({ embeds, components });
 }
 
-function createOnboardingEmbed(dailyReport: DailyReport): Embed {
+function createOnboardingEmbed(dailyReport: DailyReport, maintenanceMode: boolean): Embed {
+    const maintenanceString = 'On vient de m\'appeler en cuisine ! Ne vous inquiétez pas, je serai de retour très bientôt. Pour le moment, je n\'accepte pas l\'enregistrement de nouvelles notifications : revenez me voir un peu plus tard.'
     return {
         title: 'Notifications de disponibilité des restaurants 🍽️',
         color: 7445165,
@@ -67,8 +71,8 @@ function createOnboardingEmbed(dailyReport: DailyReport): Embed {
                 value: `Vous cherchez à réserver une table dans un des restaurants de Disneyland Paris ? Recevez une notification dès lorsque les restaurants de votre choix libèrent une table aux dates de vos prochaines visites !`,
             },
             {
-                name: '🕓 Intervalle de vérification',
-                value: `Chaque demande est actuellement vérifiée toutes les **${dailyReport.highestCheckInterval} minutes**, intervalle susceptible d'évoluer en fonction de la charge du serveur et du nombre de demandes enregistrées.`,
+                name: maintenanceMode ? '🟠 Mise en pause temporaire' : '🕓 Intervalle de vérification',
+                value: maintenanceMode ? maintenanceString : `Chaque demande est actuellement vérifiée toutes les **${dailyReport.highestCheckInterval} minutes**, intervalle susceptible d'évoluer en fonction de la charge du serveur et du nombre de demandes enregistrées.`,
             },
         ],
         footer: {
