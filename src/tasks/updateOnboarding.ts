@@ -57,7 +57,7 @@ export default async function updateOnboarding() {
 }
 
 function createOnboardingEmbed(dailyReport: DailyReport, maintenanceMode: boolean): Embed {
-    const maintenanceString = 'On vient de m\'appeler en cuisine ! Ne vous inquiétez pas, je serai de retour très bientôt. Pour le moment, je n\'accepte pas l\'enregistrement de nouvelles notifications : revenez me voir un peu plus tard.'
+    const maintenanceString = 'On vient de m\'appeler en cuisine ! Ne vous inquiétez pas, je serai de retour très bientôt. Pour le moment, **je n\'accepte pas l\'enregistrement de nouvelles notifications** : revenez me voir un peu plus tard.'
     return {
         title: 'Notifications de disponibilité des restaurants 🍽️',
         color: 7445165,
