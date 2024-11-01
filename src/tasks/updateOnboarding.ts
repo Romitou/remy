@@ -45,7 +45,7 @@ export default async function updateOnboarding() {
             new ButtonBuilder()
                 .setCustomId('startAlertBook')
                 .setLabel('Enregistrer une notification')
-                .setStyle(ButtonStyle.Success)
+                .setStyle(maintenanceMode ? ButtonStyle.Danger : ButtonStyle.Success)
                 .setDisabled(maintenanceMode)
                 .setEmoji('📬'),
             new ButtonBuilder()
