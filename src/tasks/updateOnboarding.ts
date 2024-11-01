@@ -1,7 +1,7 @@
 import { container } from '@sapphire/framework';
 import { ActionRowBuilder, BaseGuildTextChannel, ButtonBuilder, ButtonStyle, Embed, Message } from 'discord.js';
 import { DailyReport } from '../typings/core';
-import { getDailyReport } from './sendDailyReport';
+import { getDailyReport, getStatus } from './sendDailyReport';
 
 let messageId;
 
@@ -29,12 +29,23 @@ export default async function updateOnboarding() {
         maintenanceMode = true;
     }
 
+    let statusResponse;
+    try {
+        statusResponse = await getStatus();
+        if (!statusResponse?.status?.includes('OK')) {
+            maintenanceMode = true;
+        }
+    } catch (e) {
+        console.error(e);
+        maintenanceMode = true;
+    }
+
     const componentRow = new ActionRowBuilder<ButtonBuilder>()
         .addComponents(
             new ButtonBuilder()
                 .setCustomId('startAlertBook')
                 .setLabel('Enregistrer une notification')
-                .setStyle(ButtonStyle.Success)
+                .setStyle(maintenanceMode ? ButtonStyle.Danger : ButtonStyle.Success)
                 .setDisabled(maintenanceMode)
                 .setEmoji('📬'),
             new ButtonBuilder()
@@ -57,10 +68,10 @@ export default async function updateOnboarding() {
 }
 
 function createOnboardingEmbed(dailyReport: DailyReport, maintenanceMode: boolean): Embed {
-    const maintenanceString = 'On vient de m\'appeler en cuisine ! Ne vous inquiétez pas, je serai de retour très bientôt. Pour le moment, **je n\'accepte pas l\'enregistrement de nouvelles notifications** : revenez me voir un peu plus tard.'
+    const maintenanceString = 'Hey, c\'est Rémy ! Je ne parviens pas à vérifier les disponibilités des restaurants pour le moment. Je viens de prévenir les équipes afin de résoudre ce problème. Je reviens très vite, promis ! 🐭🍽️';
     return {
         title: 'Notifications de disponibilité des restaurants 🍽️',
-        color: 7445165,
+        color: maintenanceMode ? 14897443 : 7445165,
         image: {
             url: 'https://s3-01.romitou.fr/disneytables/welcome.jpg',
         },
