@@ -68,10 +68,10 @@ export default async function updateOnboarding() {
 }
 
 function createOnboardingEmbed(dailyReport: DailyReport, maintenanceMode: boolean): Embed {
-    const maintenanceString = 'Oups, quelque chose ne fonctionne pas comme prévu. Pas d\'inquiétude, cet incident technique a été remonté et sera corrigé le plus vite possible. Nous vous invitons à réessayer ultérieurement.';
+    const maintenanceString = 'Hey, c\'est Rémy ! Je ne parviens pas à vérifier les disponibilités des restaurants pour le moment. Je viens de prévenir les équipes afin de résoudre ce problème. Je reviens très vite, promis ! 🐭🍽️';
     return {
         title: 'Notifications de disponibilité des restaurants 🍽️',
-        color: 7445165,
+        color: maintenanceMode ? 14897443 : 7445165,
         image: {
             url: 'https://s3-01.romitou.fr/disneytables/welcome.jpg',
         },
