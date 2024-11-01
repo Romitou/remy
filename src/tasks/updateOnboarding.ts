@@ -1,7 +1,7 @@
 import { container } from '@sapphire/framework';
 import { ActionRowBuilder, BaseGuildTextChannel, ButtonBuilder, ButtonStyle, Embed, Message } from 'discord.js';
 import { DailyReport } from '../typings/core';
-import { getDailyReport } from './sendDailyReport';
+import { getDailyReport, getStatus } from './sendDailyReport';
 
 let messageId;
 
@@ -24,6 +24,17 @@ export default async function updateOnboarding() {
     let dailyReport: DailyReport;
     try {
         dailyReport = await getDailyReport();
+    } catch (e) {
+        console.error(e);
+        maintenanceMode = true;
+    }
+
+    let statusResponse;
+    try {
+        statusResponse = await getStatus();
+        if (!statusResponse?.status?.includes('OK')) {
+            maintenanceMode = true;
+        }
     } catch (e) {
         console.error(e);
         maintenanceMode = true;
@@ -57,7 +68,7 @@ export default async function updateOnboarding() {
 }
 
 function createOnboardingEmbed(dailyReport: DailyReport, maintenanceMode: boolean): Embed {
-    const maintenanceString = 'On vient de m\'appeler en cuisine ! Ne vous inquiétez pas, je serai de retour très bientôt. Pour le moment, **je n\'accepte pas l\'enregistrement de nouvelles notifications** : revenez me voir un peu plus tard.'
+    const maintenanceString = 'Oups, quelque chose ne fonctionne pas comme prévu. Pas d\'inquiétude, cet incident technique a été remonté et sera corrigé le plus vite possible. Nous vous invitons à réessayer ultérieurement.';
     return {
         title: 'Notifications de disponibilité des restaurants 🍽️',
         color: 7445165,

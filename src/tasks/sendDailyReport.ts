@@ -8,6 +8,11 @@ export function getDailyReport(): Promise<DailyReport> {
         .then((response) => response.data);
 }
 
+export function getStatus(): Promise<DailyReport> {
+  return getAxiosClient().get<DailyReport>('/status')
+    .then((response) => response.data);
+}
+
 export default async function sendDailyReport() {
     const { client } = container;
     let dailyReport: DailyReport;
