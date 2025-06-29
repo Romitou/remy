@@ -73,7 +73,7 @@ function createOnboardingEmbed(dailyReport: DailyReport, maintenanceMode: boolea
         title: 'Notifications de disponibilité des restaurants 🍽️',
         color: maintenanceMode ? 14897443 : 7445165,
         image: {
-            url: 'https://files.romitou.fr/remy.png?i=' + Date.now(),
+            url: 'https://s3-01.romitou.fr/disneytables/welcome.jpg',
         },
         fields: [
             {
