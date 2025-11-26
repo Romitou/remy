@@ -1,10 +1,11 @@
 import { InteractionHandler, InteractionHandlerTypes } from '@sapphire/framework';
-import { ButtonInteraction, Colors, EmbedBuilder, TextChannel } from 'discord.js';
+import { ButtonInteraction, EmbedBuilder, TextChannel } from 'discord.js';
 import { completeBookAlert } from '../core/bookAlerts';
 import Sentry from '@sentry/node';
+import { COLORS, EMOJIS, MESSAGES } from '../constants';
 
 export class MarkNotificationSolved extends InteractionHandler {
-    public constructor(ctx) {
+    public constructor(ctx: InteractionHandler.LoaderContext) {
         super(ctx, { interactionHandlerType: InteractionHandlerTypes.Button });
     }
 
@@ -18,12 +19,12 @@ export class MarkNotificationSolved extends InteractionHandler {
             await interaction.reply({
                 embeds: [
                     {
-                        title: '🛠 Oups, quelque chose est cassé !',
-                        description: 'On dirait bien que quelque chose ne fonctionne pas comme prévu. Pas d\'inquiétude, cet incident technique a été remonté et sera corrigé le plus vite possible. Nous vous invitons à réessayer ultérieurement.',
-                        color: Colors.Red,
-                        image: {
-                            url: 'https://s3-01.romitou.fr/disneytables/error.png'
-                        }
+                        title: MESSAGES.ERROR.GENERIC.TITLE,
+                        description: MESSAGES.ERROR.GENERIC.DESCRIPTION,
+                        color: COLORS.ERROR,
+                        thumbnail: {
+                            url: 'https://emojicdn.elk.sh/💔?style=google',
+                        },
                     }
                 ],
                 ephemeral: true,
@@ -32,12 +33,14 @@ export class MarkNotificationSolved extends InteractionHandler {
         }
 
         const embed = interaction.message.embeds[0];
-        const newEmbed = new EmbedBuilder(embed);
+        const newEmbed = EmbedBuilder.from(embed);
 
-        newEmbed.setColor(Colors.DarkGreen)
+        newEmbed.setColor(COLORS.SUCCESS)
             .setFooter({
-                text: 'Cette notification a été marquée comme réservée. ✅',
-            });
+                text: `${EMOJIS.SUCCESS} Réservation confirmée • Notification désactivée`,
+                iconURL: 'https://emojicdn.elk.sh/✅?style=google',
+            })
+            .setTimestamp();
 
         const channel = await interaction.client.channels.fetch(interaction.channelId);
         const message = await (channel as TextChannel).messages.fetch(interaction.message.id);
@@ -49,11 +52,19 @@ export class MarkNotificationSolved extends InteractionHandler {
         await interaction.reply({
             embeds: [
                 {
-                    title: 'Mon travail est terminé pour cette notification !',
-                    description: `Cette notification a été marquée comme réservée et aucune nouvelle notification à propos de cette notification ne vous sera envoyée. Si vous avez apprécié ce service ou si vous avez quelconque commentaire à nous faire part, n'hésitez pas à faire un tour dans le salon <#${process.env.FEEDBACK_CHANNEL_ID}> !`,
-                    color: Colors.DarkGreen,
+                    title: `${EMOJIS.SUCCESS} Félicitations pour votre réservation !`,
+                    description: `${EMOJIS.SPARKLES} **Parfait !** Cette notification a été marquée comme résolue.\n\nVous ne recevrez plus d'alertes pour cette réservation. Profitez bien de votre repas magique !\n\n💬 **Votre avis compte :** N'hésitez pas à partager votre expérience dans <#${process.env.FEEDBACK_CHANNEL_ID}> !`,
+                    color: COLORS.SUCCESS,
+                    thumbnail: {
+                        url: 'https://emojicdn.elk.sh/🎉?style=google',
+                    },
+                    footer: {
+                        text: 'Merci d\'utiliser Rémy !',
+                        icon_url: 'https://emojicdn.elk.sh/✨?style=google',
+                    }
                 }
-            ]
+            ],
+            ephemeral: true,
         })
     }
 

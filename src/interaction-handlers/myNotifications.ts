@@ -2,7 +2,6 @@ import { InteractionHandler, InteractionHandlerTypes } from '@sapphire/framework
 import {
     ActionRowBuilder,
     ButtonInteraction,
-    Colors,
     EmbedBuilder,
     SelectMenuBuilder,
     StringSelectMenuBuilder
@@ -12,10 +11,11 @@ import { RestaurantAlert } from '../typings/bookAlerts';
 import { frenchMealPeriod, normalizeDate } from '../core/utils';
 import { captureException } from '@sentry/node';
 import { fetchRestaurantById } from '../core/restaurants';
+import { COLORS, EMOJIS, MESSAGES } from '../constants';
 
 
 export class MyNotifications extends InteractionHandler {
-    public constructor(ctx) {
+    public constructor(ctx: InteractionHandler.LoaderContext) {
         super(ctx, { interactionHandlerType: InteractionHandlerTypes.Button });
     }
 
@@ -29,12 +29,12 @@ export class MyNotifications extends InteractionHandler {
             await interaction.reply({
                 embeds: [
                     {
-                        title: '🛠 Oups, quelque chose est cassé !',
-                        description: 'On dirait bien que quelque chose ne fonctionne pas comme prévu. Pas d\'inquiétude, cet incident technique a été remonté et sera corrigé le plus vite possible. Nous vous invitons à réessayer ultérieurement.',
-                        color: Colors.Red,
-                        image: {
-                            url: 'https://s3-01.romitou.fr/disneytables/error.png'
-                        }
+                        title: MESSAGES.ERROR.GENERIC.TITLE,
+                        description: MESSAGES.ERROR.GENERIC.DESCRIPTION,
+                        color: COLORS.ERROR,
+                        thumbnail: {
+                            url: 'https://emojicdn.elk.sh/💔?style=google',
+                        },
                     }
                 ],
                 ephemeral: true,
@@ -43,41 +43,61 @@ export class MyNotifications extends InteractionHandler {
         }
 
         const embed = new EmbedBuilder()
-            .setTitle('Liste de vos notifications 📬')
-            .setColor(Colors.Navy);
+            .setTitle(`${EMOJIS.BELL} Vos notifications actives`)
+            .setColor(COLORS.PRIMARY);
 
         if (bookAlerts.length === 0) {
-            embed.setDescription('Je vois que vous n\'avez aucune notification active... Cliquez sur le bouton *Enregistrer une notification* du message en haut du salon pour commencer !')
+            embed.setDescription(`${EMOJIS.SPARKLES} **Aucune notification active pour le moment**\n\nVous n'avez pas encore créé de notification de disponibilité.\n\n💡 **Pour commencer :**\nCliquez sur le bouton "*Enregistrer une notification*" dans le message épinglé du salon pour créer votre première alerte !`)
+            embed.setThumbnail('https://emojicdn.elk.sh/🔕?style=google');
             await interaction.reply({
                 embeds: [embed],
                 ephemeral: true,
             });
             return;
         } else {
-            embed.setDescription("Voici la liste de vos notifications actives. Afin de supprimer une de vos notifications, sélectionnez-la simplement dans le menu déroulant ci-dessous.");
+            embed.setDescription(`Vous avez **${bookAlerts.length}** notification(s) active(s).\n\n${EMOJIS.TRASH} Pour supprimer une notification, sélectionnez-la dans le menu ci-dessous.`);
+            embed.setThumbnail('https://emojicdn.elk.sh/🔔?style=google');
+
             for (const bookAlert of bookAlerts) {
                 const restaurant = await fetchRestaurantById(bookAlert.checks[0].restaurantId);
-                embed.addFields({
-                    name: `Notification n° ${bookAlert.id}`,
-                    value: `▫️ ${normalizeDate(bookAlert.date)}\n▫️ ${restaurant.name}\n▫️ ${bookAlert.partyMix} couverts\n▫️ ${frenchMealPeriod(bookAlert.mealPeriod)}`,
-                    inline: true,
-                });
+                if (restaurant) {
+                    const emoji = bookAlert.mealPeriod === 'BREAKFAST' ? EMOJIS.BREAKFAST :
+                                  bookAlert.mealPeriod === 'LUNCH' ? EMOJIS.LUNCH : EMOJIS.DINNER;
+
+                    embed.addFields({
+                        name: `${emoji} Notification #${bookAlert.id}`,
+                        value: `**Date :** ${normalizeDate(bookAlert.date)}\n**Restaurant :** ${restaurant.name}\n**Couverts :** ${bookAlert.partyMix} personne(s)\n**Période :** ${frenchMealPeriod(bookAlert.mealPeriod)}`,
+                        inline: true,
+                    });
+                }
             }
+
+            embed.setFooter({
+                text: `Total : ${bookAlerts.length} notification(s)`,
+                // sparkles emoji
+                iconURL: 'https://emojicdn.elk.sh/✨?style=google',
+            });
         }
 
         const menuBuilder =  new StringSelectMenuBuilder()
           .setCustomId('viewNotification')
-          .setPlaceholder('Sélectionnez une notification à supprimer');
+          .setPlaceholder(`${EMOJIS.TRASH} Sélectionnez une notification à gérer`);
 
         for (const bookAlert of bookAlerts) {
             const restaurant = await fetchRestaurantById(bookAlert.checks[0].restaurantId);
-            menuBuilder.addOptions(
-                {
-                    label: 'Supprimer la notification n°' + bookAlert.id,
-                    description: `📅 ${normalizeDate(bookAlert.date)} - 🍽 ${frenchMealPeriod(bookAlert.mealPeriod)} - 🏢 ${restaurant.name}`,
-                    value: String(bookAlert.id),
-                }
-            );
+            if (restaurant) {
+                const emoji = bookAlert.mealPeriod === 'BREAKFAST' ? EMOJIS.BREAKFAST :
+                              bookAlert.mealPeriod === 'LUNCH' ? EMOJIS.LUNCH : EMOJIS.DINNER;
+
+                menuBuilder.addOptions(
+                    {
+                        label: `#${bookAlert.id} - ${restaurant.name}`,
+                        description: `${normalizeDate(bookAlert.date)} • ${frenchMealPeriod(bookAlert.mealPeriod)} • ${bookAlert.partyMix} pers.`,
+                        value: String(bookAlert.id),
+                        emoji: emoji,
+                    }
+                );
+            }
         }
 
         const componentRow = new ActionRowBuilder<SelectMenuBuilder>()

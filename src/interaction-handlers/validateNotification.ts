@@ -1,13 +1,14 @@
 import { InteractionHandler, InteractionHandlerTypes } from '@sapphire/framework';
-import { ButtonInteraction, Colors, SelectMenuInteraction } from 'discord.js';
+import { ButtonInteraction, SelectMenuInteraction } from 'discord.js';
 import { createBookAlert } from '../core/bookAlerts';
 import { getNotificationDetails } from '../core/embeds';
 import { RestaurantAlert } from '../typings/bookAlerts';
 import Sentry from '@sentry/node';
 import { fetchRestaurantById } from '../core/restaurants';
+import { COLORS, EMOJIS, IMAGES, MESSAGES } from '../constants';
 
 export class ValidateNotification extends InteractionHandler {
-    public constructor(ctx) {
+    public constructor(ctx: InteractionHandler.LoaderContext) {
         super(ctx, { interactionHandlerType: InteractionHandlerTypes.SelectMenu });
     }
 
@@ -15,6 +16,9 @@ export class ValidateNotification extends InteractionHandler {
         const mealPeriod = interaction.values[0];
 
         const notificationDetails = await getNotificationDetails(interaction.message.embeds[0]);
+        if (!notificationDetails || !notificationDetails.date || !notificationDetails.restaurantId || !notificationDetails.partyMix) {
+            return;
+        }
 
         let bookAlert: RestaurantAlert;
         try {
@@ -32,12 +36,12 @@ export class ValidateNotification extends InteractionHandler {
             await interaction.reply({
                 embeds: [
                     {
-                        title: '🛠 Oups, quelque chose est cassé !',
-                        description: 'On dirait bien que quelque chose ne fonctionne pas comme prévu. Pas d\'inquiétude, cet incident technique a été remonté et sera corrigé le plus vite possible. Nous vous invitons à réessayer ultérieurement.',
-                        color: Colors.Red,
-                        image: {
-                            url: 'https://s3-01.romitou.fr/disneytables/error.png'
-                        }
+                        title: MESSAGES.ERROR.GENERIC.TITLE,
+                        description: MESSAGES.ERROR.GENERIC.DESCRIPTION,
+                        color: COLORS.ERROR,
+                        thumbnail: {
+                            url: 'https://emojicdn.elk.sh/💔?style=google',
+                        },
                     }
                 ],
                 ephemeral: true,
@@ -46,35 +50,74 @@ export class ValidateNotification extends InteractionHandler {
         }
 
         let eatingVerb;
+        let mealPeriodFr;
         switch (bookAlert.mealPeriod) {
             case 'BREAKFAST':
-                eatingVerb = 'petit-déjeuner';
+                eatingVerb = 'prendre votre petit-déjeuner';
+                mealPeriodFr = 'Petit-déjeuner';
                 break;
             case 'LUNCH':
                 eatingVerb = 'déjeuner';
+                mealPeriodFr = 'Déjeuner';
                 break;
             case 'DINNER':
                 eatingVerb = 'dîner';
+                mealPeriodFr = 'Dîner';
                 break;
         }
 
+        console.log(eatingVerb);
+
         const restaurant = await fetchRestaurantById(bookAlert.checks[0].restaurantId);
-        await interaction.update({
-            embeds: [
-                {
-                    title: '✅ Votre notification a bien été enregistrée !',
-                    description: `Je me chargerai personnellement de vérifier régulièrement si le restaurant **${restaurant.name}** propose des tables pour y **${eatingVerb}** le **${notificationDetails.date}** pour **${notificationDetails.partyMix}** couverts. Si je trouve une disponibilité, comptez sur moi pour vous en informer en vous en envoyant immédiatement un message privé ! Vous pouvez à tout moment gérer vos notifications en cliquant sur le bouton *Mes notifications* du message en haut du salon.`,
-                    color: Colors.Green,
-                    image: {
-                        url: 'https://s3-01.romitou.fr/disneytables/notificationCreated.jpg'
-                    },
-                    footer: {
-                        text: `Identifiant associé à votre notification : n°${bookAlert.id}`
+        if (restaurant) {
+            const successMessage = MESSAGES.SUCCESS.NOTIFICATION_CREATED(
+                restaurant.name,
+                notificationDetails.date,
+                notificationDetails.partyMix,
+                mealPeriodFr
+            );
+
+            await interaction.update({
+                embeds: [
+                    {
+                        title: successMessage.TITLE,
+                        description: successMessage.DESCRIPTION,
+                        color: COLORS.SUCCESS,
+                        thumbnail: {
+                            url: restaurant.imageUrl || IMAGES.DEFAULT_RESTAURANT,
+                        },
+                        fields: [
+                            {
+                                name: `${EMOJIS.RESTAURANT} Restaurant`,
+                                value: `\`\`\`${restaurant.name}\`\`\``,
+                                inline: false,
+                            },
+                            {
+                                name: `${EMOJIS.CALENDAR} Date`,
+                                value: `\`\`\`${notificationDetails.date}\`\`\``,
+                                inline: true,
+                            },
+                            {
+                                name: `${EMOJIS.PARTY} Couverts`,
+                                value: `\`\`\`${notificationDetails.partyMix} personne(s)\`\`\``,
+                                inline: true,
+                            },
+                            {
+                                name: `${EMOJIS.BELL} Période`,
+                                value: `\`\`\`${mealPeriodFr}\`\`\``,
+                                inline: true,
+                            },
+                        ],
+                        footer: {
+                            text: `ID de notification : #${bookAlert.id} • Créée à l'instant`,
+                            icon_url: 'https://emojicdn.elk.sh/✅?style=google',
+                        },
+                        timestamp: new Date().toISOString(),
                     }
-                }
-            ],
-            components: []
-        });
+                ],
+                components: []
+            });
+        }
     }
 
     public parse(interaction: ButtonInteraction) {

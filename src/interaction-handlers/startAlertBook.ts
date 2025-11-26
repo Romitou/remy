@@ -2,39 +2,40 @@ import { InteractionHandler, InteractionHandlerTypes } from '@sapphire/framework
 import {
     ActionRowBuilder,
     ButtonInteraction,
-    Colors, ModalActionRowComponentBuilder,
+    ModalActionRowComponentBuilder,
     ModalBuilder,
-    SelectMenuBuilder,
-    TextInputBuilder, TextInputStyle
+    TextInputBuilder,
+    TextInputStyle
 } from 'discord.js';
-import { fetchRestaurants } from '../core/restaurants';
-import { Restaurant } from '../typings/restaurants';
-import Sentry from '@sentry/node';
+import { LIMITS, EMOJIS } from '../constants';
 
 export class StartAlertBook extends InteractionHandler {
-    public constructor(ctx) {
+    public constructor(ctx: InteractionHandler.LoaderContext) {
         super(ctx, { interactionHandlerType: InteractionHandlerTypes.Button });
     }
 
     public async run(interaction: ButtonInteraction) {
         const modal = new ModalBuilder()
-            .setTitle('Indiquez votre date et vos couverts')
+            .setTitle(`${EMOJIS.SPARKLES} Créer une notification`)
             .setCustomId('chooseMealPeriod')
 
         const dateInput = new TextInputBuilder()
             .setCustomId('date')
-            .setLabel('Date de votre visite (JJ/MM/AAAA) 📅')
+            .setLabel(`${EMOJIS.CALENDAR} Date de votre visite (JJ/MM/AAAA)`)
             .setStyle(TextInputStyle.Short)
-            .setPlaceholder('24/12/2023')
-            .setMinLength(10)
-            .setMaxLength(10);
+            .setPlaceholder('Exemple : 24/12/2024')
+            .setMinLength(LIMITS.DATE_MIN_LENGTH)
+            .setMaxLength(LIMITS.DATE_MAX_LENGTH)
+            .setRequired(true);
 
         const partySizeInput = new TextInputBuilder()
             .setCustomId('partyMix')
-            .setLabel('Nombre de couverts (1 à 10) 👪')
+            .setLabel(`${EMOJIS.PARTY} Nombre de personnes (${LIMITS.PARTY_MIN}-${LIMITS.PARTY_MAX})`)
             .setStyle(TextInputStyle.Short)
-            .setMinLength(1)
-            .setMaxLength(2);
+            .setPlaceholder('Exemple : 4')
+            .setMinLength(LIMITS.PARTY_INPUT_MIN_LENGTH)
+            .setMaxLength(LIMITS.PARTY_INPUT_MAX_LENGTH)
+            .setRequired(true);
 
         const dateRow = new ActionRowBuilder<ModalActionRowComponentBuilder>().addComponents(dateInput);
         const partySizeRow = new ActionRowBuilder<ModalActionRowComponentBuilder>().addComponents(partySizeInput);

@@ -1,14 +1,12 @@
 import { InteractionHandler, InteractionHandlerTypes } from '@sapphire/framework';
-import { ActionRowBuilder, ButtonInteraction, Colors, SelectMenuBuilder, SelectMenuInteraction } from 'discord.js';
-import { Restaurant } from '../typings/restaurants';
-import { fetchRestaurantByDisneyId } from '../core/restaurants';
+import {ButtonInteraction, SelectMenuInteraction} from 'discord.js';
 
 export class ChooseRestaurant extends InteractionHandler {
-    public constructor(ctx) {
+    public constructor(ctx: InteractionHandler.LoaderContext) {
         super(ctx, { interactionHandlerType: InteractionHandlerTypes.SelectMenu });
     }
 
-    public async run(interaction: SelectMenuInteraction) {
+    public async run(_interaction: SelectMenuInteraction) {
         // const restaurantDisneyId = interaction.values[0];
         // const restaurant = await fetchRestaurantByDisneyId(restaurantDisneyId);
         //

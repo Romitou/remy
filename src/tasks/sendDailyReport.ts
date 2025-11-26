@@ -1,52 +1,109 @@
-import { DailyReport, Statistics } from '../typings/core';
+import { DailyReport } from '../typings/core';
 import { container } from '@sapphire/framework';
-import { ActivityType, Colors, EmbedBuilder } from 'discord.js';
+import { Colors, EmbedBuilder } from 'discord.js';
 import { getAxiosClient } from '../core/axios';
+import { getLogger } from '../config/logger';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
-export function getDailyReport(): Promise<DailyReport> {
-    return getAxiosClient().get<DailyReport>('/daily-report')
-        .then((response) => response.data);
+const logger = getLogger();
+
+/**
+ * Fetch daily report from API
+ */
+export async function getDailyReport(): Promise<DailyReport> {
+  try {
+    const response = await getAxiosClient().get<DailyReport>('/daily-report');
+    return response.data;
+  } catch (error) {
+    logger.error({ error }, 'Failed to fetch daily report');
+    throw error;
+  }
 }
 
-export function getStatus(): Promise<DailyReport> {
-  return getAxiosClient().get<DailyReport>('/status')
-    .then((response) => response.data);
+/**
+ * Fetch status from API
+ */
+export async function getStatus(): Promise<DailyReport> {
+  try {
+    const response = await getAxiosClient().get<DailyReport>('/status');
+    return response.data;
+  } catch (error) {
+    logger.error({ error }, 'Failed to fetch status');
+    throw error;
+  }
 }
 
-export default async function sendDailyReport() {
+/**
+ * Send daily report to the owner
+ */
+export default async function sendDailyReport(): Promise<void> {
+  try {
     const { client } = container;
-    let dailyReport: DailyReport;
-    try {
-        dailyReport = await getDailyReport();
-    } catch (e) {
-        console.error(e);
-        return;
+
+    // Get owner ID from environment
+    const ownerId = process.env.OWNER_ID;
+    if (!ownerId) {
+      logger.warn('OWNER_ID not set, skipping daily report');
+      return;
     }
 
-    const userId = process.env.OWNER_ID;
-    const user = await client.users.fetch(userId);
+    // Fetch daily report
+    let dailyReport: DailyReport;
+    try {
+      dailyReport = await getDailyReport();
+    } catch (error) {
+      logger.error({ error }, 'Failed to fetch daily report, aborting send');
+      return;
+    }
 
+    // Fetch owner user
+    const owner = await client.users.fetch(ownerId);
+
+    // Create embed
+    const today = format(new Date(), 'PPP', { locale: fr });
     const embed = new EmbedBuilder()
-        .setTitle('Rapport quotidien')
-        .setColor(Colors.Navy)
-        .setFields([
-            {
-                name: 'Nouveaux créneaux',
-                value: dailyReport.newBookSlots.toString(),
-            },
-            {
-                name: 'Nouvelles notifications',
-                value: dailyReport.newBookAlerts.toString(),
-            },
-            {
-                name: 'Nouvelles notifications envoyées',
-                value: dailyReport.newNotifications.toString(),
-            },
-            {
-                name: 'Intervalle de vérification le plus long',
-                value: dailyReport.highestCheckInterval + ' minutes',
-            }
-        ]);
+      .setTitle('📊 Rapport quotidien')
+      .setDescription(`Rapport d'activité pour le ${today}`)
+      .setColor(Colors.Navy)
+      .setFields([
+        {
+          name: '🆕 Nouveaux créneaux',
+          value: dailyReport.newBookSlots.toString(),
+          inline: true,
+        },
+        {
+          name: '🔔 Nouvelles alertes',
+          value: dailyReport.newBookAlerts.toString(),
+          inline: true,
+        },
+        {
+          name: '📬 Notifications envoyées',
+          value: dailyReport.newNotifications.toString(),
+          inline: true,
+        },
+        {
+          name: '⏱️ Intervalle max de vérification',
+          value: `${dailyReport.highestCheckInterval} minutes`,
+          inline: true,
+        },
+      ])
+      .setTimestamp();
 
-    await user.send({ embeds: [embed] });
+    await owner.send({ embeds: [embed] });
+
+    logger.info(
+      {
+        ownerId,
+        newSlots: dailyReport.newBookSlots,
+        newAlerts: dailyReport.newBookAlerts,
+        newNotifications: dailyReport.newNotifications,
+      },
+      'Daily report sent successfully',
+    );
+  } catch (error) {
+    logger.error({ error }, 'Error sending daily report');
+    // Don't throw - let the task continue running
+  }
 }
+
