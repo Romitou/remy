@@ -16,6 +16,11 @@ const SELECTION_CACHE_TTL = 900; // 15 minutes
 export async function getCachedRestaurantSelection(userId: string): Promise<number[]> {
   try {
     const redis = getRedisClient();
+    if (!redis.isOpen) {
+      logger.warn({ userId }, 'Redis not connected, returning empty selection');
+      return [];
+    }
+
     const cacheKey = `restaurant_selection:${userId}`;
     const cached = await redis.get(cacheKey);
 
@@ -26,7 +31,7 @@ export async function getCachedRestaurantSelection(userId: string): Promise<numb
     const data: RestaurantSelectionCache = JSON.parse(cached);
     return data.selectedRestaurantIds;
   } catch (error) {
-    logger.error({ error, userId }, 'Failed to get cached restaurant selection');
+    logger.error({ error: String(error), userId }, 'Failed to get cached restaurant selection');
     return [];
   }
 }
@@ -40,6 +45,11 @@ export async function cacheRestaurantSelection(
 ): Promise<void> {
   try {
     const redis = getRedisClient();
+    if (!redis.isOpen) {
+      logger.warn({ userId }, 'Redis not connected, cannot cache selection');
+      return;
+    }
+
     const cacheKey = `restaurant_selection:${userId}`;
 
     const data: RestaurantSelectionCache = {
@@ -50,7 +60,7 @@ export async function cacheRestaurantSelection(
     await redis.setEx(cacheKey, SELECTION_CACHE_TTL, JSON.stringify(data));
     logger.debug({ userId, count: restaurantIds.length }, 'Cached restaurant selection');
   } catch (error) {
-    logger.error({ error, userId }, 'Failed to cache restaurant selection');
+    logger.error({ error: String(error), userId }, 'Failed to cache restaurant selection');
   }
 }
 
@@ -60,11 +70,16 @@ export async function cacheRestaurantSelection(
 export async function clearCachedRestaurantSelection(userId: string): Promise<void> {
   try {
     const redis = getRedisClient();
+    if (!redis.isOpen) {
+      logger.warn({ userId }, 'Redis not connected, cannot clear selection');
+      return;
+    }
+
     const cacheKey = `restaurant_selection:${userId}`;
     await redis.del(cacheKey);
     logger.debug({ userId }, 'Cleared cached restaurant selection');
   } catch (error) {
-    logger.error({ error, userId }, 'Failed to clear cached restaurant selection');
+    logger.error({ error: String(error), userId }, 'Failed to clear cached restaurant selection');
   }
 }
 

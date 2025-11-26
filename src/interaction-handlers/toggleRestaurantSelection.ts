@@ -50,13 +50,8 @@ export class ToggleRestaurantSelection extends InteractionHandler {
         'User updated restaurant selection',
       );
 
-      // Refresh the page to show updated selection
-      // Trigger the selectRestaurants handler to rebuild the message
-      const currentPage = 1; // You might want to extract this from the message
-      await this.container.client.emit('interactionCreate', {
-        ...interaction,
-        customId: `selectRestaurants-${currentPage}`,
-      } as any);
+      // Note: The selection is now cached. The user will see the updated selection
+      // when they navigate to a new page or click "Continue"
     } catch (error) {
       await handleInteractionError(interaction, error, {
         customId: interaction.customId,

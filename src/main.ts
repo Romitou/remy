@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import { IntentsBitField } from 'discord.js';
 import { SapphireClient } from '@sapphire/framework';
-import { disconnectRedis } from './core/redis';
+import {disconnectRedis, subscribeBookNotifications} from './core/redis';
 import { init as initSentry, close as closeSentry } from '@sentry/node';
 import { schedule, ScheduledTask } from 'node-cron';
 import updatePresence from './tasks/updatePresence';
@@ -88,7 +88,7 @@ async function initialize(): Promise<void> {
   logger.info('Scheduled tasks configured');
 
   // Subscribe to Redis notifications
-  // await subscribeBookNotifications();
+  await subscribeBookNotifications();
   logger.info('Application initialization complete');
 }
 
