@@ -20,7 +20,7 @@ export async function createBookAlert(
     const response = await getAxiosClient().post<RestaurantAlert>('/discord-alerts', {
       restaurantIds,
       discordId,
-      mealPeriod,
+      mealPeriod: mealPeriod.toUpperCase(),
       date,
       partyMix,
     });
