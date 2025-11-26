@@ -191,7 +191,7 @@ export class ChooseMealPeriod extends InteractionHandler {
   }
 
   public parse(interaction: ModalSubmitInteraction) {
-    if (interaction.customId !== 'chooseMealPeriod') return this.none();
+    if (!interaction.customId.startsWith('chooseMealPeriod')) return this.none();
     return this.some();
   }
 }
