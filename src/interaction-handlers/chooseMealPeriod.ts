@@ -3,12 +3,14 @@ import {
   ActionRowBuilder,
   ModalSubmitInteraction,
   StringSelectMenuBuilder,
+  ButtonBuilder,
+  ButtonStyle,
 } from 'discord.js';
-import { fetchRestaurantByDisneyId } from '../core/restaurants';
+import { fetchRestaurantById } from '../core/restaurants';
 import { isValidDateFormat, parseDateDDMMYYYY } from '../core/utils';
 import { handleInteractionError } from '../lib/errorHandler';
 import { getLogger } from '../config/logger';
-import { isAfter, startOfDay } from 'date-fns';
+import { isAfter, startOfDay, addDays } from 'date-fns';
 import { COLORS, EMOJIS, IMAGES, MESSAGES, LIMITS } from '../constants';
 
 const logger = getLogger();
@@ -21,6 +23,24 @@ export class ChooseMealPeriod extends InteractionHandler {
   public async run(interaction: ModalSubmitInteraction): Promise<void> {
     try {
       await interaction.deferReply({ ephemeral: true });
+
+      // Parse restaurant IDs from customId (format: chooseMealPeriod-1,2,3)
+      const customIdParts = interaction.customId.split('-');
+      if (customIdParts.length < 2) {
+        await interaction.followUp({
+          embeds: [
+            {
+              title: MESSAGES.ERROR.GENERIC.TITLE,
+              description: MESSAGES.ERROR.GENERIC.DESCRIPTION,
+              color: COLORS.ERROR,
+            },
+          ],
+          ephemeral: true,
+        });
+        return;
+      }
+
+      const restaurantIds = customIdParts[1].split(',').map((id) => parseInt(id, 10));
 
       // Validate date
       const rawDate = interaction.fields.getTextInputValue('date');
@@ -44,9 +64,11 @@ export class ChooseMealPeriod extends InteractionHandler {
         return;
       }
 
-      // Check if date is in the future
+      // Check if date is in the future and within range
       const visitDate = parseDateDDMMYYYY(rawDate);
       const today = startOfDay(new Date());
+      const maxDate = addDays(today, LIMITS.DATE_RANGE_DAYS);
+
       if (!isAfter(visitDate, today) && visitDate.getTime() !== today.getTime()) {
         await interaction.followUp({
           embeds: [
@@ -59,6 +81,23 @@ export class ChooseMealPeriod extends InteractionHandler {
               },
               footer: {
                 text: '💡 Les réservations ne peuvent être faites que pour des dates futures.',
+              },
+            },
+          ],
+          ephemeral: true,
+        });
+        return;
+      }
+
+      if (isAfter(visitDate, maxDate)) {
+        await interaction.followUp({
+          embeds: [
+            {
+              title: `${EMOJIS.WARNING} Date trop lointaine`,
+              description: `La date ne peut pas dépasser ${LIMITS.DATE_RANGE_DAYS} jours dans le futur.\n\n💡 **Astuce :** Choisissez une date plus proche.`,
+              color: COLORS.WARNING,
+              thumbnail: {
+                url: 'https://emojicdn.elk.sh/📅?style=google',
               },
             },
           ],
@@ -91,10 +130,13 @@ export class ChooseMealPeriod extends InteractionHandler {
       }
 
       // Get restaurant info
-      const restaurantDisneyId = interaction.customId.split('-')[1];
-      const restaurant = await fetchRestaurantByDisneyId(restaurantDisneyId);
+      const restaurants = await Promise.all(
+        restaurantIds.map((id) => fetchRestaurantById(id)),
+      );
 
-      if (!restaurant) {
+      const validRestaurants = restaurants.filter((r) => r !== undefined);
+
+      if (validRestaurants.length === 0) {
         await interaction.followUp({
           embeds: [
             {
@@ -114,7 +156,7 @@ export class ChooseMealPeriod extends InteractionHandler {
       // Create meal period selection menu
       const componentRow = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
         new StringSelectMenuBuilder()
-          .setCustomId(`chooseDateAndPartyMix-${rawDate}-${parsedPartyMix}-${restaurant.disneyId}`)
+          .setCustomId(`confirmNotification-${restaurantIds.join(',')}-${rawDate}-${parsedPartyMix}`)
           .setPlaceholder('🕐 Sélectionnez votre période de repas')
           .setOptions([
             {
@@ -138,19 +180,29 @@ export class ChooseMealPeriod extends InteractionHandler {
           ]),
       );
 
+      const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+        new ButtonBuilder()
+          .setCustomId('startAlertBook')
+          .setLabel('Modifier la sélection')
+          .setEmoji(EMOJIS.BACK)
+          .setStyle(ButtonStyle.Secondary),
+      );
+
+      const restaurantsList = validRestaurants.map((r) => `• ${r!.name}`).join('\n');
+
       await interaction.followUp({
         embeds: [
           {
             title: `${EMOJIS.SPARKLES} Dernière étape : choisissez votre période de repas`,
-            description: `Excellent choix pour le restaurant **${restaurant.name}** !\n\n${EMOJIS.LOADING} **Récapitulatif de votre demande :**`,
+            description: `Excellent choix ! Nous surveillerons les disponibilités pour vous.\n\n${EMOJIS.LOADING} **Récapitulatif de votre demande :**`,
             color: COLORS.PRIMARY,
             thumbnail: {
-              url: restaurant.imageUrl || IMAGES.DEFAULT_RESTAURANT,
+              url: validRestaurants[0]!.imageUrl || IMAGES.DEFAULT_RESTAURANT,
             },
             fields: [
               {
-                name: `${EMOJIS.RESTAURANT} Restaurant`,
-                value: `\`\`\`${restaurant.name}\`\`\``,
+                name: `${EMOJIS.RESTAURANT} Restaurant(s) (${validRestaurants.length})`,
+                value: `\`\`\`\n${restaurantsList}\n\`\`\``,
                 inline: false,
               },
               {
@@ -165,19 +217,20 @@ export class ChooseMealPeriod extends InteractionHandler {
               },
             ],
             footer: {
-              text: '✨ Plus qu\'une étape pour finaliser votre notification !',
+              text: `✨ Étape 3/3 • Plus qu'une étape pour finaliser votre notification !`,
               icon_url: 'https://emojicdn.elk.sh/✨?style=google',
             },
           },
         ],
-        components: [componentRow],
+        components: [componentRow, actionRow],
         ephemeral: true,
       });
 
       logger.info(
         {
           userId: interaction.user.id,
-          restaurant: restaurant.name,
+          restaurantCount: validRestaurants.length,
+          restaurantIds,
           date: rawDate,
           partyMix: parsedPartyMix,
         },
@@ -191,7 +244,7 @@ export class ChooseMealPeriod extends InteractionHandler {
   }
 
   public parse(interaction: ModalSubmitInteraction) {
-    if (!interaction.customId.startsWith('chooseMealPeriod')) return this.none();
+    if (!interaction.customId.startsWith('chooseMealPeriod-')) return this.none();
     return this.some();
   }
 }
