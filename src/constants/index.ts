@@ -34,6 +34,19 @@ export const IMAGES = {
   DEFAULT_RESTAURANT: 'https://media.disneylandparis.com/d4th/fr-fr/images/n031922_2049jul09_world_food-the-lion-king-jungle-festival-buffet_5-1_tcm808-224702.jpg?w=1920',
 } as const;
 
+export const LIMITS = {
+  DATE_MIN_LENGTH: 10,
+  DATE_MAX_LENGTH: 10,
+  PARTY_MIN: 1,
+  PARTY_MAX: 10,
+  PARTY_INPUT_MIN_LENGTH: 1,
+  PARTY_INPUT_MAX_LENGTH: 2,
+  MAX_RESTAURANTS_PER_ALERT: 5,
+  MAX_ALERTS_PER_USER: 10,
+  DATE_RANGE_DAYS: 90,
+  RESTAURANTS_PER_PAGE: 20, // Discord limit is 25, we keep 20 for pagination buttons
+} as const;
+
 export const MESSAGES = {
   ERROR: {
     GENERIC: {
@@ -56,6 +69,22 @@ export const MESSAGES = {
       TITLE: `${EMOJIS.ERROR} Restaurant introuvable`,
       DESCRIPTION: 'Le restaurant sélectionné n\'a pas pu être trouvé dans notre base de données.\n\n💡 **Suggestions :**\n• Vérifiez que le restaurant est toujours disponible\n• Réessayez en quelques instants\n• Contactez un administrateur si le problème persiste',
     },
+    MAX_RESTAURANTS_SELECTED: {
+      TITLE: `${EMOJIS.WARNING} Limite de restaurants atteinte`,
+      DESCRIPTION: `Vous ne pouvez sélectionner que ${LIMITS.MAX_RESTAURANTS_PER_ALERT} restaurants maximum par notification.\n\n💡 **Astuce :** Créez plusieurs notifications si vous souhaitez surveiller plus de restaurants !`,
+    },
+    MAX_ALERTS_REACHED: {
+      TITLE: `${EMOJIS.WARNING} Limite de notifications atteinte`,
+      DESCRIPTION: `Vous avez atteint la limite de ${LIMITS.MAX_ALERTS_PER_USER} notifications actives.\n\n💡 **Solution :** Supprimez d'anciennes notifications via "*Mes notifications*" avant d'en créer de nouvelles.`,
+    },
+    DUPLICATE_ALERT: {
+      TITLE: `${EMOJIS.WARNING} Notification déjà existante`,
+      DESCRIPTION: 'Vous avez déjà une notification active avec ces mêmes critères.\n\n💡 **Astuce :** Consultez vos notifications existantes via le bouton "*Mes notifications*".',
+    },
+    NO_RESTAURANTS_SELECTED: {
+      TITLE: `${EMOJIS.WARNING} Aucun restaurant sélectionné`,
+      DESCRIPTION: 'Vous devez sélectionner au moins un restaurant pour continuer.\n\n✨ Veuillez réessayer en choisissant un ou plusieurs restaurants.',
+    },
   },
   SUCCESS: {
     NOTIFICATION_CREATED: (restaurantName: string, date: string, partyMix: number, mealPeriod: string) => ({
@@ -63,14 +92,17 @@ export const MESSAGES = {
       DESCRIPTION: `${EMOJIS.SPARKLES} **Parfait !** Je surveillerai les disponibilités pour vous.\n\n${EMOJIS.RESTAURANT} **Restaurant :** ${restaurantName}\n${EMOJIS.CALENDAR} **Date :** ${date}\n${EMOJIS.PARTY} **Couverts :** ${partyMix} personne(s)\n${EMOJIS.BELL} **Période :** ${mealPeriod}\n\n${EMOJIS.CHEF} **Promis !** Dès qu'une table se libère, vous recevrez un message privé instantanément.\n\n💡 **Astuce :** Gérez vos notifications via le bouton "*Mes notifications*" dans le salon principal.`,
     }),
   },
-} as const;
-
-export const LIMITS = {
-  DATE_MIN_LENGTH: 10,
-  DATE_MAX_LENGTH: 10,
-  PARTY_MIN: 1,
-  PARTY_MAX: 10,
-  PARTY_INPUT_MIN_LENGTH: 1,
-  PARTY_INPUT_MAX_LENGTH: 2,
+  INFO: {
+    SELECT_RESTAURANTS: (page: number, totalPages: number, totalRestaurants: number) => ({
+      TITLE: `${EMOJIS.RESTAURANT} Sélectionnez vos restaurants favoris`,
+      DESCRIPTION: `Choisissez jusqu'à **${LIMITS.MAX_RESTAURANTS_PER_ALERT} restaurants** pour lesquels vous souhaitez être notifié. Vous recevrez une alerte dès qu'une table se libère dans l'un d'entre eux !\n\n📊 **${totalRestaurants} restaurants disponibles** • Page ${page}/${totalPages}`,
+      FOOTER: `💡 Plus vous sélectionnez de restaurants, plus vous avez de chances d'obtenir une réservation !`,
+    }),
+    CONFIRM_NOTIFICATION: (restaurantNames: string[], _date: string, _partyMix: number, _mealPeriod: string) => ({
+      TITLE: `${EMOJIS.SPARKLES} Récapitulatif de votre notification`,
+      DESCRIPTION: `Vérifiez les informations ci-dessous avant de confirmer la création de votre notification.\n\n📋 **Vous serez alerté dès qu'une disponibilité apparaît pour ces critères.**`,
+      RESTAURANTS_FIELD: restaurantNames.map(name => `• ${name}`).join('\n'),
+    }),
+  },
 } as const;
 
