@@ -10,7 +10,7 @@ import { fetchRestaurantById } from '../core/restaurants';
 import { isValidDateFormat, parseDateDDMMYYYY } from '../core/utils';
 import { handleInteractionError } from '../lib/errorHandler';
 import { getLogger } from '../config/logger';
-import { isAfter, startOfDay, addDays } from 'date-fns';
+import { isAfter, startOfDay } from 'date-fns';
 import { COLORS, EMOJIS, IMAGES, MESSAGES, LIMITS } from '../constants';
 
 const logger = getLogger();
@@ -67,7 +67,7 @@ export class ChooseMealPeriod extends InteractionHandler {
       // Check if date is in the future and within range
       const visitDate = parseDateDDMMYYYY(rawDate);
       const today = startOfDay(new Date());
-      const maxDate = addDays(today, LIMITS.DATE_RANGE_DAYS);
+      // const maxDate = addDays(today, LIMITS.DATE_RANGE_DAYS);
 
       if (!isAfter(visitDate, today) && visitDate.getTime() !== today.getTime()) {
         await interaction.followUp({
@@ -79,9 +79,6 @@ export class ChooseMealPeriod extends InteractionHandler {
               thumbnail: {
                 url: 'https://emojicdn.elk.sh/⏳?style=google',
               },
-              footer: {
-                text: '💡 Les réservations ne peuvent être faites que pour des dates futures.',
-              },
             },
           ],
           ephemeral: true,
@@ -89,22 +86,22 @@ export class ChooseMealPeriod extends InteractionHandler {
         return;
       }
 
-      if (isAfter(visitDate, maxDate)) {
-        await interaction.followUp({
-          embeds: [
-            {
-              title: `${EMOJIS.WARNING} Date trop lointaine`,
-              description: `La date ne peut pas dépasser ${LIMITS.DATE_RANGE_DAYS} jours dans le futur.\n\n💡 **Astuce :** Choisissez une date plus proche.`,
-              color: COLORS.WARNING,
-              thumbnail: {
-                url: 'https://emojicdn.elk.sh/📅?style=google',
-              },
-            },
-          ],
-          ephemeral: true,
-        });
-        return;
-      }
+      // if (isAfter(visitDate, maxDate)) {
+      //   await interaction.followUp({
+      //     embeds: [
+      //       {
+      //         title: `${EMOJIS.WARNING} Date trop lointaine`,
+      //         description: `La date ne peut pas dépasser ${LIMITS.DATE_RANGE_DAYS} jours dans le futur.\n\n💡 **Astuce :** Choisissez une date plus proche.`,
+      //         color: COLORS.WARNING,
+      //         thumbnail: {
+      //           url: 'https://emojicdn.elk.sh/📅?style=google',
+      //         },
+      //       },
+      //     ],
+      //     ephemeral: true,
+      //   });
+      //   return;
+      // }
 
       // Validate party mix
       const rawPartyMix = interaction.fields.getTextInputValue('partyMix');

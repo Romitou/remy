@@ -100,13 +100,13 @@ export function buildRestaurantSelectionMessage(
     );
   }
 
-  actionButtons.push(
-    new ButtonBuilder()
-      .setCustomId('cancelRestaurantSelection')
-      .setLabel('Annuler')
-      .setEmoji(EMOJIS.ERROR)
-      .setStyle(ButtonStyle.Danger),
-  );
+  // actionButtons.push(
+  //   new ButtonBuilder()
+  //     .setCustomId('cancelRestaurantSelection')
+  //     .setLabel('Annuler')
+  //     .setEmoji(EMOJIS.ERROR)
+  //     .setStyle(ButtonStyle.Danger),
+  // );
 
   const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(actionButtons);
 

@@ -59,7 +59,7 @@ export const MESSAGES = {
     },
     PAST_DATE: {
       TITLE: `${EMOJIS.WARNING} Date dans le passé`,
-      DESCRIPTION: 'La date que vous avez saisie est déjà passée.\n\n💡 **Astuce :** Veuillez saisir une date actuelle ou future pour votre visite.\n\n✨ Réessayez avec une date à venir !',
+      DESCRIPTION: 'La date que vous avez saisie est déjà passée. Veuillez saisir une date actuelle ou future pour votre visite.',
     },
     INVALID_PARTY: {
       TITLE: `${EMOJIS.WARNING} Nombre de personnes invalide`,
@@ -96,7 +96,7 @@ export const MESSAGES = {
     SELECT_RESTAURANTS: (page: number, totalPages: number, totalRestaurants: number) => ({
       TITLE: `${EMOJIS.RESTAURANT} Sélectionnez vos restaurants favoris`,
       DESCRIPTION: `Choisissez jusqu'à **${LIMITS.MAX_RESTAURANTS_PER_ALERT} restaurants** pour lesquels vous souhaitez être notifié. Vous recevrez une alerte dès qu'une table se libère dans l'un d'entre eux !\n\n📊 **${totalRestaurants} restaurants disponibles** • Page ${page}/${totalPages}`,
-      FOOTER: `💡 Plus vous sélectionnez de restaurants, plus vous avez de chances d'obtenir une réservation !`,
+      FOOTER: `Plus vous sélectionnez de restaurants, plus vous avez de chances d'obtenir une réservation !`,
     }),
     CONFIRM_NOTIFICATION: (restaurantNames: string[], _date: string, _partyMix: number, _mealPeriod: string) => ({
       TITLE: `${EMOJIS.SPARKLES} Récapitulatif de votre notification`,
