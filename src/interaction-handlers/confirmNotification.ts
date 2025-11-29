@@ -83,6 +83,7 @@ export class ConfirmNotification extends InteractionHandler {
           mealPeriodFr = mealPeriod;
           mealPeriodTime = '';
       }
+      console.log(mealPeriodTime);
 
       const restaurantNames = validRestaurants.map((r) => r!.name);
       const messageContent = MESSAGES.INFO.CONFIRM_NOTIFICATION(
@@ -137,7 +138,7 @@ export class ConfirmNotification extends InteractionHandler {
               },
               {
                 name: `${EMOJIS.BELL} Période de repas`,
-                value: `\`\`\`${mealPeriodFr} ${mealPeriodTime ? `(${mealPeriodTime})` : ''}\`\`\``,
+                value: `\`\`\`${mealPeriodFr}\`\`\``,
                 inline: true,
               },
             ],
