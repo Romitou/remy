@@ -1,46 +1,70 @@
 import { ActivityType } from 'discord.js';
 import { Statistics } from '../typings/core';
 import { container } from '@sapphire/framework';
-import axios from 'axios';
 import { getAxiosClient } from '../core/axios';
+import { getLogger } from '../config/logger';
 
-function fetchBookAlerts(): Promise<Statistics> {
-    return getAxiosClient().get<Statistics>('/statistics')
-        .then((response) => response.data);
+const logger = getLogger();
+
+/**
+ * Fetch statistics from the API
+ */
+async function fetchStatistics(): Promise<Statistics> {
+  try {
+    const response = await getAxiosClient().get<Statistics>('/statistics');
+    return response.data;
+  } catch (error) {
+    logger.error({ error }, 'Failed to fetch statistics for presence update');
+    throw error;
+  }
 }
 
 let nextPresence = 0;
 
-export default async function updatePresence() {
+/**
+ * Update the bot's presence with rotating statistics
+ */
+export default async function updatePresence(): Promise<void> {
+  try {
     const { client } = container;
-    const statistics = await fetchBookAlerts();
-    switch (nextPresence) {
-        case 0:
-            client.user?.setPresence({
-                activities: [{
-                    name: `${statistics.slots} créneaux`,
-                    type: ActivityType.Watching,
-                }],
-            });
-            nextPresence = 1;
-            break;
-        case 1:
-            client.user?.setPresence({
-                activities: [{
-                    name: `${statistics.alerts} notifications`,
-                    type: ActivityType.Watching,
-                }],
-            });
-            nextPresence = 2;
-            break;
-        case 2:
-            client.user?.setPresence({
-                activities: [{
-                    name: `les disponibilités des restaurants`,
-                    type: ActivityType.Watching,
-                }],
-            });
-            nextPresence = 0;
-            break;
+
+    if (!client.user) {
+      logger.warn('Client user not available, skipping presence update');
+      return;
     }
+
+    const statistics = await fetchStatistics();
+
+    const presences = [
+      {
+        name: `${statistics.slots} créneaux`,
+        type: ActivityType.Watching,
+      },
+      {
+        name: `${statistics.alerts} notifications`,
+        type: ActivityType.Watching,
+      },
+      {
+        name: `les disponibilités des restaurants`,
+        type: ActivityType.Watching,
+      },
+    ];
+
+    const currentPresence = presences[nextPresence];
+
+    await client.user.setPresence({
+      activities: [currentPresence],
+      status: 'online',
+    });
+
+    logger.debug({ presence: currentPresence.name }, 'Presence updated');
+
+    // Cycle to next presence
+    nextPresence = (nextPresence + 1) % presences.length;
+  } catch (error) {
+    logger.error({ error }, 'Error updating presence');
+    // Don't throw - let the task continue running
+  }
 }
+
+

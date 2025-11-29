@@ -10,7 +10,7 @@ import {
 } from 'discord.js';
 
 export class ChooseDateAndPartyMix extends InteractionHandler {
-    public constructor(ctx) {
+    public constructor(ctx: InteractionHandler.LoaderContext) {
         super(ctx, { interactionHandlerType: InteractionHandlerTypes.SelectMenu });
     }
 

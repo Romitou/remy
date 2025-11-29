@@ -1,23 +1,50 @@
 {
   "name": "remy",
+  "version": "2.0.0",
+  "description": "Discord bot for Disneyland Paris restaurant booking notifications",
   "main": "./build/main.js",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "dependencies": {
-    "@sapphire/framework": "^4.5.2",
-    "@sentry/node": "^7.64.0",
-    "axios": "^1.4.0",
-    "discord.js": "^14.13.0",
-    "dotenv": "^16.3.1",
-    "moment": "^2.29.4",
-    "node-cron": "^3.0.2",
-    "redis": "^4.6.7"
+    "@sapphire/framework": "^5.3.0",
+    "@sentry/node": "^8.38.0",
+    "axios": "^1.7.9",
+    "axios-retry": "^4.5.0",
+    "date-fns": "^4.1.0",
+    "discord.js": "^14.16.3",
+    "dotenv": "^16.4.7",
+    "node-cron": "^3.0.3",
+    "pino": "^9.5.0",
+    "pino-pretty": "^13.0.0",
+    "redis": "^4.7.0",
+    "zod": "^3.23.8"
   },
   "scripts": {
-    "start": "yarn build && yarn run exec",
-    "exec": "node build/main.js",
-    "build": "tsc"
+    "start": "node build/main.js",
+    "dev": "tsx watch src/main.ts",
+    "build": "tsc",
+    "clean": "rm -rf build",
+    "rebuild": "yarn clean && yarn build",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\"",
+    "type-check": "tsc --noEmit",
+    "validate": "yarn type-check && yarn lint && yarn format:check"
   },
   "devDependencies": {
-    "@types/node-cron": "^3.0.8",
-    "typescript": "^5.1.6"
+    "@types/node": "^22.10.1",
+    "@types/node-cron": "^3.0.11",
+    "@typescript-eslint/eslint-plugin": "^8.15.0",
+    "@typescript-eslint/parser": "^8.15.0",
+    "eslint": "^8.57.1",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.4.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
   }
 }
+
+
