@@ -108,8 +108,6 @@ export function buildRestaurantSelectionMessage(
   //     .setStyle(ButtonStyle.Danger),
   // );
 
-  const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(actionButtons);
-
   // Build embed
   const messageContent = MESSAGES.INFO.SELECT_RESTAURANTS(currentPage, totalPages, totalRestaurants);
   const embedFields: Array<{ name: string; value: string; inline?: boolean }> = [];
@@ -121,6 +119,13 @@ export function buildRestaurantSelectionMessage(
       value: '```\n' + selectedRestaurants.map((r) => `• ${r.name}`).join('\n') + '\n```',
       inline: false,
     });
+  }
+
+  // Build components array - only include actionRow if it has buttons
+  const components = [selectRow.toJSON(), navigationRow.toJSON()];
+  if (actionButtons.length > 0) {
+    const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(actionButtons);
+    components.push(actionRow.toJSON());
   }
 
   return {
@@ -142,7 +147,7 @@ export function buildRestaurantSelectionMessage(
         },
       },
     ],
-    components: [selectRow.toJSON(), navigationRow.toJSON(), actionRow.toJSON()],
+    components,
   };
 }
 
