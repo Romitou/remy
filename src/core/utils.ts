@@ -1,5 +1,6 @@
 import { format, parse } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { EMOJIS } from '../constants';
 
 /**
  * Convert meal period to French
@@ -14,6 +15,29 @@ export function frenchMealPeriod(mealPeriod: string): string {
       return 'Petit-déjeuner';
     default:
       return mealPeriod;
+  }
+}
+
+export type MealPeriod = 'breakfast' | 'lunch' | 'dinner';
+
+/**
+ * Check whether a value is a known meal period
+ */
+export function isMealPeriod(value: string): value is MealPeriod {
+  return value === 'breakfast' || value === 'lunch' || value === 'dinner';
+}
+
+/**
+ * Get the emoji matching a meal period
+ */
+export function mealPeriodEmoji(mealPeriod: string): string {
+  switch (mealPeriod.toLowerCase()) {
+    case 'breakfast':
+      return EMOJIS.BREAKFAST;
+    case 'lunch':
+      return EMOJIS.LUNCH;
+    default:
+      return EMOJIS.DINNER;
   }
 }
 
@@ -35,25 +59,18 @@ export function normalizeDate(rawDate: string): string {
  * Convert 12-hour time format to 24-hour format
  */
 export function convertTime12to24(time12h: string): string {
-  const [time, modifier] = time12h.split(' ');
-  let [hours, minutes] = time.split(':');
-
-  if (hours === '12') {
-    hours = '00';
-  }
+  const [time, modifier] = time12h.trim().split(' ');
+  const [rawHours, minutes] = time.split(':');
+  let hours = parseInt(rawHours, 10) % 12;
 
   if (modifier?.toUpperCase() === 'PM') {
-    hours = String(parseInt(hours, 10) + 12);
+    hours += 12;
+  } else if (modifier?.toUpperCase() !== 'AM') {
+    // Already in 24-hour format
+    hours = parseInt(rawHours, 10);
   }
 
-  return `${hours}:${minutes}`;
-}
-
-/**
- * Format a date for display in French
- */
-export function formatDateFr(date: Date): string {
-  return format(date, 'PPP', { locale: fr });
+  return `${String(hours).padStart(2, '0')}:${minutes}`;
 }
 
 /**

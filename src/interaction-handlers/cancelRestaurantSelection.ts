@@ -21,7 +21,7 @@ export class CancelRestaurantSelection extends InteractionHandler {
         embeds: [
           {
             title: `${EMOJIS.SUCCESS} Sélection annulée`,
-            description: 'Vous avez annulé la création de notification.\n\n💡 **Vous pouvez recommencer à tout moment** en cliquant sur le bouton "*Enregistrer une notification*".',
+            description: 'Vous avez annulé la création de notification.\n\n💡 **Vous pouvez recommencer à tout moment** en cliquant sur le bouton "*Créer une alerte*".',
             color: COLORS.INFO,
             thumbnail: {
               url: 'https://emojicdn.elk.sh/👋?style=google',

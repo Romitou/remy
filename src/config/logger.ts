@@ -43,11 +43,3 @@ export function getLogger(): pino.Logger {
   }
   return loggerInstance!;
 }
-
-/**
- * Create a child logger with additional context
- */
-export function createChildLogger(context: Record<string, unknown>): pino.Logger {
-  return getLogger().child(context);
-}
-

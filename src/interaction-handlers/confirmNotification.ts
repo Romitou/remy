@@ -6,6 +6,8 @@ import {
   ButtonStyle,
 } from 'discord.js';
 import { fetchRestaurantById } from '../core/restaurants';
+import { frenchMealPeriod, isMealPeriod } from '../core/utils';
+import { customIdArgs, parseIdList, parsePositiveInt } from '../lib/customId';
 import { handleInteractionError } from '../lib/errorHandler';
 import { getLogger } from '../config/logger';
 import { COLORS, EMOJIS, IMAGES, MESSAGES } from '../constants';
@@ -24,8 +26,10 @@ export class ConfirmNotification extends InteractionHandler {
       const mealPeriod = interaction.values[0];
 
       // Parse customId: confirmNotification-1,2,3-24/12/2025-4
-      const customIdParts = interaction.customId.split('-');
-      if (customIdParts.length < 4) {
+      const [rawRestaurantIds, rawDate, rawPartyMix] = customIdArgs(interaction.customId);
+      const restaurantIds = parseIdList(rawRestaurantIds);
+      const partyMix = parsePositiveInt(rawPartyMix);
+      if (!restaurantIds || !rawDate || !partyMix || !isMealPeriod(mealPeriod)) {
         await interaction.followUp({
           embeds: [
             {
@@ -39,9 +43,6 @@ export class ConfirmNotification extends InteractionHandler {
         return;
       }
 
-      const restaurantIds = customIdParts[1].split(',').map((id) => parseInt(id, 10));
-      const rawDate = customIdParts[2];
-      const partyMix = parseInt(customIdParts[3], 10);
 
       // Fetch restaurant details
       const restaurants = await Promise.all(
@@ -63,35 +64,10 @@ export class ConfirmNotification extends InteractionHandler {
         return;
       }
 
-      // Get meal period label in French
-      let mealPeriodFr: string;
-      let mealPeriodTime: string;
-      switch (mealPeriod) {
-        case 'breakfast':
-          mealPeriodFr = 'Petit-déjeuner';
-          mealPeriodTime = '7h-11h';
-          break;
-        case 'lunch':
-          mealPeriodFr = 'Déjeuner';
-          mealPeriodTime = '11h30-15h';
-          break;
-        case 'dinner':
-          mealPeriodFr = 'Dîner';
-          mealPeriodTime = '18h-22h';
-          break;
-        default:
-          mealPeriodFr = mealPeriod;
-          mealPeriodTime = '';
-      }
-      console.log(mealPeriodTime);
+      const mealPeriodFr = frenchMealPeriod(mealPeriod);
 
       const restaurantNames = validRestaurants.map((r) => r!.name);
-      const messageContent = MESSAGES.INFO.CONFIRM_NOTIFICATION(
-        restaurantNames,
-        rawDate,
-        partyMix,
-        mealPeriodFr,
-      );
+      const messageContent = MESSAGES.INFO.CONFIRM_NOTIFICATION(restaurantNames);
 
       // Build confirmation buttons
       const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(

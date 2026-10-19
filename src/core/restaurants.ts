@@ -1,5 +1,5 @@
 import { AxiosResponse } from 'axios';
-import { Restaurant, RestaurantAvailabilities } from '../typings/restaurants';
+import { Restaurant } from '../typings/restaurants';
 import { getAxiosClient } from './axios';
 import { getLogger } from '../config/logger';
 
@@ -65,57 +65,3 @@ export async function fetchRestaurantById(id: number): Promise<Restaurant | unde
   const restaurants = await fetchRestaurants();
   return restaurants.find((restaurant) => restaurant.id === id);
 }
-
-/**
- * Find restaurant by Disney ID
- */
-export async function fetchRestaurantByDisneyId(disneyId: string): Promise<Restaurant | undefined> {
-  const restaurants = await fetchRestaurants();
-  return restaurants.find((restaurant) => restaurant.disneyId === disneyId);
-}
-
-/**
- * Find restaurant by name
- */
-export async function fetchRestaurantByName(name: string): Promise<Restaurant | undefined> {
-  const restaurants = await fetchRestaurants();
-  return restaurants.find((restaurant) => restaurant.name === name);
-}
-
-/**
- * Fetch restaurant availabilities for a specific date and party size
- */
-export async function fetchRestaurantAvailabilities(
-  date: string,
-  restaurantId: number,
-  partyMix: number,
-): Promise<RestaurantAvailabilities[]> {
-  try {
-    logger.debug({ date, restaurantId, partyMix }, 'Fetching restaurant availabilities');
-
-    const response = await getAxiosClient().post<RestaurantAvailabilities[]>('/availabilities', {
-      date,
-      restaurantId,
-      partyMix,
-    });
-
-    logger.debug(
-      { count: response.data.length, restaurantId },
-      'Restaurant availabilities fetched',
-    );
-    return response.data;
-  } catch (error) {
-    logger.error({ error, date, restaurantId, partyMix }, 'Failed to fetch availabilities');
-    throw error;
-  }
-}
-
-/**
- * Clear the restaurant cache
- */
-export function clearRestaurantCache(): void {
-  restaurantCache = null;
-  logger.info('Restaurant cache cleared');
-}
-
-

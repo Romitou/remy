@@ -1,4 +1,4 @@
-import { Restaurant } from './restaurants';
+import { z } from 'zod';
 
 export interface RestaurantAlert {
     id: number;
@@ -23,12 +23,20 @@ export interface RestaurantCheck {
     updatedAt: string;
 }
 
-export interface BookNotification {
-    alertId: number;
-    discordId: string;
-    restaurant: Restaurant;
-    date: string;
-    mealPeriod: string;
-    partyMix: number;
-    hours: string[];
-}
+/**
+ * Notification published by DisneyTables on the "restaurant-notifications" Redis channel
+ */
+export const bookNotificationSchema = z.object({
+  alertId: z.number(),
+  discordId: z.string(),
+  restaurant: z.object({
+    name: z.string(),
+    imageUrl: z.string().nullish(),
+  }),
+  date: z.string(),
+  mealPeriod: z.string(),
+  partyMix: z.number(),
+  hours: z.array(z.string()),
+});
+
+export type BookNotification = z.infer<typeof bookNotificationSchema>;

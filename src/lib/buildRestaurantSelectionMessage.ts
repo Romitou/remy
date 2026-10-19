@@ -89,7 +89,7 @@ export function buildRestaurantSelectionMessage(
   // Build action buttons
   const actionButtons: ButtonBuilder[] = [];
 
-  // Continue button - TOUJOURS affiché si au moins 1 restaurant sélectionné
+  // Continue button, shown as soon as at least one restaurant is selected
   if (selectedIds.length > 0) {
     actionButtons.push(
       new ButtonBuilder()
@@ -99,14 +99,6 @@ export function buildRestaurantSelectionMessage(
         .setStyle(ButtonStyle.Success),
     );
   }
-
-  // actionButtons.push(
-  //   new ButtonBuilder()
-  //     .setCustomId('cancelRestaurantSelection')
-  //     .setLabel('Annuler')
-  //     .setEmoji(EMOJIS.ERROR)
-  //     .setStyle(ButtonStyle.Danger),
-  // );
 
   // Build embed
   const messageContent = MESSAGES.INFO.SELECT_RESTAURANTS(currentPage, totalPages, totalRestaurants);

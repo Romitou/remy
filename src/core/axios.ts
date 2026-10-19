@@ -26,13 +26,9 @@ export function createAxiosClient(): AxiosInstance {
   axiosRetry(client, {
     retries: 3,
     retryDelay: axiosRetry.exponentialDelay,
-    retryCondition: (error) => {
-      // Retry on network errors or 5xx errors
-      return (
-        axiosRetry.isNetworkOrIdempotentRequestError(error) ||
-        (error.response?.status !== undefined && error.response.status >= 500)
-      );
-    },
+    // Only retry idempotent requests (network errors and 5xx): retrying a POST could create
+    // duplicate alerts
+    retryCondition: axiosRetry.isNetworkOrIdempotentRequestError,
     onRetry: (retryCount, error, requestConfig) => {
       logger.warn(
         {
