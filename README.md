@@ -8,45 +8,31 @@ Using the [DisneyTables](https://github.com/Romitou/DisneyTables) project specia
 
 ## 🚀 Features
 
-- 📬 Real-time notifications for restaurant availability
+- 📬 Real-time notifications for restaurant availability, sent in DM
 - 🔔 Custom alerts based on date, party size, and meal period
-- 🤖 Modern Discord.js v14 with Sapphire Framework v5
-- 📊 Daily reports and statistics
-- 🔄 Automatic reconnection for Redis and API
-- 🛡️ Error tracking with Sentry
-- 📝 Structured logging with Pino
-- 🐳 Docker support for easy deployment
+- 🤖 Discord.js v14 with Sapphire Framework v5
+- 📊 Daily reports and live statistics in the bot presence
+- 🔄 Automatic reconnection for Redis and retries for API calls
+- 🛡️ Error tracking with Sentry and structured logging with Pino
 
 ## 📋 Prerequisites
 
-- Node.js 20.x or higher
-- Yarn package manager
+- Node.js 20.x or higher (with npm)
 - Redis server
 - DisneyTables API instance
 
 ## 🛠️ Installation
 
-1. Clone the repository:
 ```bash
 git clone https://github.com/Romitou/Remy.git
 cd Remy
-```
-
-2. Install dependencies:
-```bash
-yarn install
-```
-
-3. Copy the environment template and configure:
-```bash
+npm ci
 cp .env.example .env
 ```
 
-4. Edit `.env` with your configuration (see Environment Variables below)
+Then edit `.env` with your configuration (see below).
 
 ## 🔧 Environment Variables
-
-Create a `.env` file with the following variables:
 
 - `DISCORD_TOKEN` : the token of your Discord bot
 - `BASE_API` : the API address of your DisneyTables instance
@@ -56,79 +42,64 @@ Create a `.env` file with the following variables:
 - `SENTRY_DSN` : (optional) the DSN address to your Sentry configuration
 - `NODE_ENV` : environment mode (`development`, `production`, or `test`)
 - `LOG_LEVEL` : logging level (`fatal`, `error`, `warn`, `info`, `debug`, `trace`)
-- `OWNER_ID` : Discord user ID to receive daily reports
-- `CHANNEL_ID` : Discord channel ID for the onboarding message
+- `OWNER_ID` : (optional) Discord user ID receiving the daily report
+- `CHANNEL_ID` : (optional) Discord channel ID hosting the onboarding message
+- `FEEDBACK_CHANNEL_ID` : (optional) Discord channel ID mentioned after a successful booking
+- `GUILD_ID` : (optional) guild of `CHANNEL_ID`, only used by `tools/sendMaintenanceMessage.js`
+
+Variables left empty are considered as not set.
 
 ## 🚀 Usage
 
-### Development Mode
+### Development
+
 ```bash
-yarn dev
+npm run dev
 ```
 
-### Production Build
+### Production
+
 ```bash
-yarn build
-yarn start
+npm run build
+npm start
 ```
 
-### Docker Deployment
+### Docker
+
 ```bash
-docker-compose up -d
+docker compose up -d --build
 ```
+
+The provided `docker-compose.yml` starts the bot along with a Redis server; the other variables are read from `.env`.
 
 ## 📜 Available Scripts
 
-- `yarn dev` - Start in development mode with hot reload
-- `yarn build` - Build the TypeScript project
-- `yarn start` - Start the production build
-- `yarn lint` - Run ESLint
-- `yarn lint:fix` - Run ESLint and fix issues
-- `yarn format` - Format code with Prettier
-- `yarn format:check` - Check code formatting
-- `yarn type-check` - Run TypeScript type checking
-- `yarn validate` - Run all checks (types, lint, format)
+- `npm run dev` - Start in development mode with hot reload
+- `npm run build` - Build the TypeScript project
+- `npm start` - Start the production build
+- `npm test` - Run the unit tests
+- `npm run lint` / `npm run lint:fix` - Run ESLint
+- `npm run format` / `npm run format:check` - Format code with Prettier
+- `npm run type-check` - Run TypeScript type checking
+- `npm run validate` - Run all checks (types, lint, format, tests), as done by the CI
 
 ## 🏗️ Project Structure
 
 ```
 src/
-├── config/           # Configuration and environment validation
-│   ├── environment.ts
-│   └── logger.ts
-├── core/            # Core business logic
-│   ├── axios.ts
-│   ├── bookAlerts.ts
-│   ├── embeds.ts
-│   ├── redis.ts
-│   ├── restaurants.ts
-│   └── utils.ts
-├── interaction-handlers/  # Discord interaction handlers
-├── lib/             # Shared utilities
-│   └── errorHandler.ts
-├── tasks/           # Scheduled tasks
-│   ├── sendDailyReport.ts
-│   ├── updateOnboarding.ts
-│   └── updatePresence.ts
-├── typings/         # TypeScript type definitions
-└── main.ts          # Application entry point
+├── config/                # Environment validation and logger
+├── constants/             # Colors, emojis, limits and texts
+├── core/                  # API, Redis and notification logic
+├── interaction-handlers/  # Discord interaction handlers (buttons, menus, modals)
+├── lib/                   # Shared helpers (errors, customIds, restaurant selection)
+├── tasks/                 # Scheduled tasks (presence, onboarding, daily report)
+├── typings/               # TypeScript type definitions
+├── instrument.ts          # Sentry initialization, loaded first
+└── main.ts                # Application entry point
+test/                      # Unit tests (node:test)
 ```
 
-## 🔄 Recent Improvements
-
-This project has been completely modernized with:
-
-- ✅ Updated to latest dependencies (Discord.js v14, Sapphire v5, etc.)
-- ✅ Migrated from Moment.js to date-fns for better performance
-- ✅ Strict TypeScript configuration with full type safety
-- ✅ Structured logging with Pino
-- ✅ Environment validation with Zod
-- ✅ Centralized error handling with Sentry integration
-- ✅ Axios retry logic for resilient API calls
-- ✅ Graceful shutdown handling
-- ✅ ESLint and Prettier for code quality
-- ✅ Docker support for containerized deployment
-- ✅ Comprehensive documentation
+See [ARCHITECTURE.md](./ARCHITECTURE.md) for the alert creation workflow.
 
 ## 📝 License
 
@@ -137,4 +108,3 @@ This project is licensed under the terms specified in the LICENSE file.
 ## 👨‍💻 Author
 
 Created and developed by [Romitou](https://github.com/Romitou) for DLP HELP - Notifications et entraides
-
