@@ -11,7 +11,7 @@ import { getLogger } from '../config/logger';
 import { COLORS, EMOJIS, MESSAGES } from '../constants';
 import { getCachedRestaurantSelection, clearCachedRestaurantSelection } from '../lib/restaurantSelection';
 import { buildRestaurantSelectionMessage } from '../lib/buildRestaurantSelectionMessage';
-import Sentry from '@sentry/node';
+import { captureException } from '@sentry/node';
 
 const logger = getLogger();
 
@@ -47,7 +47,7 @@ export class SelectRestaurants extends InteractionHandler {
         restaurants = await fetchRestaurants();
       } catch (error) {
         logger.error({ error }, 'Failed to fetch restaurants');
-        Sentry.captureException(error);
+        captureException(error);
         await interaction.followUp({
           embeds: [
             {

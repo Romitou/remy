@@ -81,6 +81,10 @@ export const MESSAGES = {
       TITLE: `${EMOJIS.WARNING} Notification déjà existante`,
       DESCRIPTION: 'Vous avez déjà une notification active avec ces mêmes critères.\n\n💡 **Astuce :** Consultez vos notifications existantes via le bouton "*Mes notifications*".',
     },
+    ALERT_NOT_FOUND: {
+      TITLE: `${EMOJIS.ERROR} Notification introuvable`,
+      DESCRIPTION: 'Cette notification n\'existe plus ou ne vous appartient pas.\n\n💡 **Astuce :** Consultez vos notifications actives via le bouton "*Voir mes alertes*".',
+    },
     NO_RESTAURANTS_SELECTED: {
       TITLE: `${EMOJIS.WARNING} Aucun restaurant sélectionné`,
       DESCRIPTION: 'Vous devez sélectionner au moins un restaurant pour continuer.\n\n✨ Veuillez réessayer en choisissant un ou plusieurs restaurants.',

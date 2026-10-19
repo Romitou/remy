@@ -1,5 +1,6 @@
 import { format, parse } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { EMOJIS } from '../constants';
 
 /**
  * Convert meal period to French
@@ -14,6 +15,20 @@ export function frenchMealPeriod(mealPeriod: string): string {
       return 'Petit-déjeuner';
     default:
       return mealPeriod;
+  }
+}
+
+/**
+ * Get the emoji matching a meal period
+ */
+export function mealPeriodEmoji(mealPeriod: string): string {
+  switch (mealPeriod.toLowerCase()) {
+    case 'breakfast':
+      return EMOJIS.BREAKFAST;
+    case 'lunch':
+      return EMOJIS.LUNCH;
+    default:
+      return EMOJIS.DINNER;
   }
 }
 

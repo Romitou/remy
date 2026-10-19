@@ -15,6 +15,11 @@ const environmentSchema = z.object({
   // Sentry Configuration
   SENTRY_DSN: z.string().url('SENTRY_DSN must be a valid URL').optional(),
 
+  // Discord IDs
+  OWNER_ID: z.string().optional(),
+  CHANNEL_ID: z.string().optional(),
+  FEEDBACK_CHANNEL_ID: z.string().optional(),
+
   // Application Configuration
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),

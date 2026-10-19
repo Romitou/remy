@@ -2,7 +2,7 @@ import { InteractionHandler, InteractionHandlerTypes } from '@sapphire/framework
 import { ButtonInteraction } from 'discord.js';
 import { createBookAlert } from '../core/bookAlerts';
 import { RestaurantAlert } from '../typings/bookAlerts';
-import Sentry from '@sentry/node';
+import { captureException } from '@sentry/node';
 import { fetchRestaurantById } from '../core/restaurants';
 import { COLORS, EMOJIS, IMAGES, MESSAGES } from '../constants';
 import { handleInteractionError } from '../lib/errorHandler';
@@ -53,7 +53,7 @@ export class ValidateNotification extends InteractionHandler {
         );
       } catch (e) {
         logger.error({ error: e, userId: interaction.user.id }, 'Failed to create book alert');
-        Sentry.captureException(e);
+        captureException(e);
         await interaction.followUp({
           embeds: [
             {

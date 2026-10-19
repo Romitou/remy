@@ -20,12 +20,9 @@ export async function createRedisClient(): Promise<void> {
     url: env.REDIS_URL,
     password: env.REDIS_PASSWORD,
     socket: {
+      // Never give up: a dead subscriber would silently stop all notifications
       reconnectStrategy: (retries) => {
-        if (retries > 20) {
-          logger.error('Redis: Too many reconnection attempts, giving up');
-          return new Error('Redis: Max reconnection attempts reached');
-        }
-        const delay = Math.min(retries * 100, 3000);
+        const delay = Math.min(retries * 100, 5000);
         logger.warn({ retries, delay }, 'Redis: Reconnecting...');
         return delay;
       },
