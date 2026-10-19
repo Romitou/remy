@@ -42,7 +42,6 @@ export class ValidateNotification extends InteractionHandler {
         return;
       }
 
-
       let bookAlert: RestaurantAlert;
       try {
         const parsedDate = rawDate.split('/').reverse().join('-');

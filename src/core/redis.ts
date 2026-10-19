@@ -54,8 +54,7 @@ export async function createRedisClient(): Promise<void> {
     redisClient = client as RedisClientType;
   } catch (error) {
     logger.error({ error }, 'Failed to connect to Redis');
-    if (env.NODE_ENV === 'production')
-        throw error;
+    if (env.NODE_ENV === 'production') throw error;
   }
 }
 

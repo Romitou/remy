@@ -1,5 +1,8 @@
 import {
   ActionRowBuilder,
+  APIActionRowComponent,
+  APIEmbed,
+  APIComponentInMessageActionRow,
   ButtonBuilder,
   ButtonStyle,
   StringSelectMenuBuilder,
@@ -9,8 +12,8 @@ import { Restaurant } from '../typings/restaurants';
 import { COLORS, EMOJIS, IMAGES, MESSAGES, LIMITS } from '../constants';
 
 export interface RestaurantSelectionMessagePayload {
-  embeds: any[];
-  components: any[];
+  embeds: APIEmbed[];
+  components: APIActionRowComponent<APIComponentInMessageActionRow>[];
 }
 
 /**
@@ -101,7 +104,11 @@ export function buildRestaurantSelectionMessage(
   }
 
   // Build embed
-  const messageContent = MESSAGES.INFO.SELECT_RESTAURANTS(currentPage, totalPages, totalRestaurants);
+  const messageContent = MESSAGES.INFO.SELECT_RESTAURANTS(
+    currentPage,
+    totalPages,
+    totalRestaurants,
+  );
   const embedFields: Array<{ name: string; value: string; inline?: boolean }> = [];
 
   if (selectedIds.length > 0) {
@@ -114,7 +121,10 @@ export function buildRestaurantSelectionMessage(
   }
 
   // Build components array - only include actionRow if it has buttons
-  const components = [selectRow.toJSON(), navigationRow.toJSON()];
+  const components: RestaurantSelectionMessagePayload['components'] = [
+    selectRow.toJSON(),
+    navigationRow.toJSON(),
+  ];
   if (actionButtons.length > 0) {
     const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(actionButtons);
     components.push(actionRow.toJSON());
@@ -142,4 +152,3 @@ export function buildRestaurantSelectionMessage(
     components,
   };
 }
-

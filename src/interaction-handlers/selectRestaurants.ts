@@ -1,15 +1,13 @@
 import { InteractionHandler, InteractionHandlerTypes } from '@sapphire/framework';
-import {
-  ButtonInteraction,
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-} from 'discord.js';
+import { ButtonInteraction, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { fetchRestaurants } from '../core/restaurants';
 import { handleInteractionError } from '../lib/errorHandler';
 import { getLogger } from '../config/logger';
 import { COLORS, EMOJIS, LIMITS, MESSAGES } from '../constants';
-import { getCachedRestaurantSelection, clearCachedRestaurantSelection } from '../lib/restaurantSelection';
+import {
+  getCachedRestaurantSelection,
+  clearCachedRestaurantSelection,
+} from '../lib/restaurantSelection';
 import { buildRestaurantSelectionMessage } from '../lib/buildRestaurantSelectionMessage';
 import { customIdArgs, parsePositiveInt } from '../lib/customId';
 import { captureException } from '@sentry/node';
@@ -126,4 +124,3 @@ export class SelectRestaurants extends InteractionHandler {
     return this.none();
   }
 }
-

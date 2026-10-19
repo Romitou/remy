@@ -96,5 +96,3 @@ export function isValidDateFormat(dateStr: string): boolean {
     return false;
   }
 }
-
-
