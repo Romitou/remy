@@ -39,7 +39,11 @@ export function validateEnvironment(): Environment {
   }
 
   try {
-    envCache = environmentSchema.parse(process.env);
+    // Empty values (e.g. "SENTRY_DSN=" copied from .env.example) mean "not set"
+    const definedEnv = Object.fromEntries(
+      Object.entries(process.env).filter(([, value]) => value !== ''),
+    );
+    envCache = environmentSchema.parse(definedEnv);
     return envCache;
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -62,4 +66,3 @@ export function getEnvironment(): Environment {
   }
   return envCache!;
 }
-
