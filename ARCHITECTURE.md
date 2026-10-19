@@ -563,8 +563,6 @@ pm2 restart remy
 
 ## 📚 Documentation Complémentaire
 
-- [IMPLEMENTATION_COMPLETE.md](./IMPLEMENTATION_COMPLETE.md) - Vue d'ensemble
-- [TESTING_GUIDE.md](./TESTING_GUIDE.md) - Guide de test
 - [README.md](./README.md) - Documentation utilisateur
 
 ---
