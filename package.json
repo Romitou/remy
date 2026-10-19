@@ -26,13 +26,14 @@
     "dev": "tsx watch src/main.ts",
     "build": "tsc",
     "clean": "rm -rf build",
-    "rebuild": "yarn clean && yarn build",
-    "lint": "eslint src --ext .ts",
-    "lint:fix": "eslint src --ext .ts --fix",
-    "format": "prettier --write \"src/**/*.ts\"",
-    "format:check": "prettier --check \"src/**/*.ts\"",
-    "type-check": "tsc --noEmit",
-    "validate": "yarn type-check && yarn lint && yarn format:check"
+    "rebuild": "npm run clean && npm run build",
+    "test": "node --import tsx --test test/*.test.ts",
+    "lint": "eslint src test --ext .ts",
+    "lint:fix": "eslint src test --ext .ts --fix",
+    "format": "prettier --write \"{src,test}/**/*.ts\"",
+    "format:check": "prettier --check \"{src,test}/**/*.ts\"",
+    "type-check": "tsc --noEmit -p tsconfig.eslint.json",
+    "validate": "npm run type-check && npm run lint && npm run format:check && npm test"
   },
   "devDependencies": {
     "@types/node": "^22.10.1",
@@ -46,5 +47,3 @@
     "typescript": "^5.7.2"
   }
 }
-
-
