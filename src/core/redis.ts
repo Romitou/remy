@@ -1,13 +1,11 @@
 import { createClient, RedisClientType } from 'redis';
-import { BookNotification } from '../typings/bookAlerts';
-import { container } from '@sapphire/framework';
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Colors, EmbedBuilder } from 'discord.js';
-import { convertTime12to24, frenchMealPeriod, normalizeDate } from './utils';
+import { handleBookNotificationMessage } from './bookNotifications';
 import { getEnvironment } from '../config/environment';
 import { getLogger } from '../config/logger';
 import { captureException } from '@sentry/node';
 
 let redisClient: RedisClientType | null = null;
+let subscriberClient: RedisClientType | null = null;
 const logger = getLogger();
 
 /**
@@ -99,109 +97,43 @@ export async function subscribeBookNotifications(): Promise<void> {
 
   // Create a duplicate client for pub/sub (Redis requirement)
   const subscriber = redisClient.duplicate();
-  await subscriber.connect();
 
+  // Registered before connecting: an 'error' event without listener crashes the process
   subscriber.on('error', (error) => {
     logger.error({ error }, 'Redis Subscriber Error');
     captureException(error, { tags: { component: 'redis-subscriber' } });
   });
 
-  await subscriber.subscribe('restaurant-notifications', async (message) => {
-    try {
-      const bookNotification: BookNotification = JSON.parse(message) as BookNotification;
+  await subscriber.connect();
+  subscriberClient = subscriber;
 
-      logger.info(
-        {
-          userId: bookNotification.discordId,
-          restaurant: bookNotification.restaurant.name,
-          date: bookNotification.date,
-        },
-        'Processing book notification',
-      );
-
-      const user = await container.client.users.fetch(bookNotification.discordId);
-
-      const embed = new EmbedBuilder()
-        .setTitle('📬 Nouvelle notification de réservation')
-        .setColor(Colors.Navy)
-        .setImage(bookNotification.restaurant.imageUrl)
-        .setFooter({
-          text: `Alerte de disponibilité associée à votre notification n°${bookNotification.alertId}`,
-        })
-        .setDescription(
-          "Hey, ici Rémy ! Une table est **actuellement disponible à la réservation** selon les critères que vous avez définis, sur l'application Disneyland Paris.",
-        );
-
-      embed.setFields([
-        {
-          name: '🏢 Restaurant',
-          value: bookNotification.restaurant.name,
-          inline: true,
-        },
-        {
-          name: '📅 Date',
-          value: normalizeDate(bookNotification.date),
-          inline: true,
-        },
-        {
-          name: '🕒 Heure(s)',
-          value: bookNotification.hours.map(convertTime12to24).join(', '),
-          inline: true,
-        },
-        {
-          name: '🍽️ Nombre de couverts',
-          value: `${bookNotification.partyMix} couverts`,
-          inline: true,
-        },
-        {
-          name: '😋 Période de repas',
-          value: frenchMealPeriod(bookNotification.mealPeriod),
-          inline: true,
-        },
-      ]);
-
-      const componentRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
-        new ButtonBuilder()
-          .setCustomId(`markNotificationSolved-${bookNotification.alertId}`)
-          .setLabel('Marquer comme réservé')
-          .setStyle(ButtonStyle.Success)
-          .setEmoji('✅'),
-      );
-
-      await user.send({
-        embeds: [embed],
-        components: [componentRow],
-      });
-
-      logger.info(
-        { userId: bookNotification.discordId, alertId: bookNotification.alertId },
-        'Book notification sent successfully',
-      );
-    } catch (error) {
-      logger.error({ error, message }, 'Failed to process book notification');
-      captureException(error, {
-        tags: { component: 'book-notification' },
-        extra: { message },
-      });
-    }
+  await subscriber.subscribe('restaurant-notifications', (message) => {
+    void handleBookNotificationMessage(message);
   });
 
   logger.info('Subscribed to restaurant-notifications channel');
 }
 
 /**
- * Gracefully disconnect from Redis
+ * Gracefully disconnect a Redis client
  */
-export async function disconnectRedis(): Promise<void> {
-  if (redisClient && redisClient.isOpen) {
-    try {
-      await redisClient.quit();
-      logger.info('Redis: Disconnected gracefully');
-    } catch (error) {
-      logger.error({ error }, 'Error disconnecting from Redis');
-      await redisClient.disconnect();
-    }
+async function closeClient(client: RedisClientType | null): Promise<void> {
+  if (!client?.isOpen) {
+    return;
+  }
+  try {
+    await client.quit();
+  } catch (error) {
+    logger.error({ error }, 'Error disconnecting from Redis');
+    await client.disconnect();
   }
 }
 
-
+/**
+ * Gracefully disconnect from Redis
+ */
+export async function disconnectRedis(): Promise<void> {
+  await closeClient(subscriberClient);
+  await closeClient(redisClient);
+  logger.info('Redis: Disconnected gracefully');
+}
