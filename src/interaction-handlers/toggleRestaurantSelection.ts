@@ -1,8 +1,8 @@
 import { InteractionHandler, InteractionHandlerTypes } from '@sapphire/framework';
-import { StringSelectMenuInteraction } from 'discord.js';
+import { ComponentType, StringSelectMenuInteraction } from 'discord.js';
 import { handleInteractionError } from '../lib/errorHandler';
 import { getLogger } from '../config/logger';
-import { COLORS, EMOJIS, LIMITS } from '../constants';
+import { COLORS, LIMITS, MESSAGES } from '../constants';
 import { cacheRestaurantSelection, getCachedRestaurantSelection } from '../lib/restaurantSelection';
 import { buildRestaurantSelectionMessage } from '../lib/buildRestaurantSelectionMessage';
 import { fetchRestaurants } from '../core/restaurants';
@@ -26,8 +26,8 @@ export class ToggleRestaurantSelection extends InteractionHandler {
         await interaction.followUp({
           embeds: [
             {
-              title: `${EMOJIS.WARNING} Trop de restaurants sélectionnés`,
-              description: `Vous ne pouvez sélectionner que **${LIMITS.MAX_RESTAURANTS_PER_ALERT} restaurants maximum**.\n\nVous avez essayé d'en sélectionner ${selectedValues.length}.`,
+              title: MESSAGES.ERROR.TOO_MANY_RESTAURANTS.TITLE,
+              description: MESSAGES.ERROR.TOO_MANY_RESTAURANTS.DESCRIPTION,
               color: COLORS.WARNING,
               thumbnail: {
                 url: 'https://emojicdn.elk.sh/⚠️?style=google',
@@ -56,19 +56,15 @@ export class ToggleRestaurantSelection extends InteractionHandler {
       try {
         const restaurants = await fetchRestaurants();
         const sortedRestaurants = [...restaurants].sort((a, b) => a.name.localeCompare(b.name, 'fr'));
-        const totalPages = Math.ceil(sortedRestaurants.length / 20);
+        const totalPages = Math.ceil(sortedRestaurants.length / LIMITS.RESTAURANTS_PER_PAGE);
 
         // Extract current page from the message (look for "Page X/Y" in the button)
         let currentPage = 1;
-        const messageComponents = interaction.message.components as any[];
-        if (messageComponents && messageComponents.length > 1) {
-          const navigationRow = messageComponents[1];
-          if (navigationRow && navigationRow.components) {
-            const pageButton = navigationRow.components.find(
-              (c: any) => c.customId === 'pageIndicator'
-            );
-            if (pageButton && pageButton.label) {
-              const match = pageButton.label.match(/Page (\d+)\//);
+        for (const row of interaction.message.components) {
+          if (row.type !== ComponentType.ActionRow) continue;
+          for (const component of row.components) {
+            if (component.type === ComponentType.Button && component.customId === 'pageIndicator') {
+              const match = component.label?.match(/Page (\d+)\//);
               if (match) {
                 currentPage = parseInt(match[1], 10);
               }

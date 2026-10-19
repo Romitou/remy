@@ -35,20 +35,6 @@ export async function createBookAlert(
 }
 
 /**
- * Fetch all book alerts
- */
-export async function fetchBookAlerts(): Promise<RestaurantAlert[]> {
-  try {
-    const response = await getAxiosClient().get<RestaurantAlert[]>('/discord-alerts');
-    logger.debug({ count: response.data.length }, 'Fetched all book alerts');
-    return response.data;
-  } catch (error) {
-    logger.error({ error }, 'Failed to fetch book alerts');
-    throw error;
-  }
-}
-
-/**
  * Fetch active book alerts for a specific user
  */
 export async function fetchActiveBookAlertsForUser(discordId: string): Promise<RestaurantAlert[]> {
@@ -101,4 +87,3 @@ export async function completeBookAlert(id: number): Promise<RestaurantAlert> {
     throw error;
   }
 }
-

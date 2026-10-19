@@ -9,8 +9,9 @@ import {
 import { fetchRestaurantById } from '../core/restaurants';
 import { isValidDateFormat, parseDateDDMMYYYY } from '../core/utils';
 import { handleInteractionError } from '../lib/errorHandler';
+import { customIdArgs, parseIdList, parsePositiveInt } from '../lib/customId';
 import { getLogger } from '../config/logger';
-import { isAfter, startOfDay } from 'date-fns';
+import { isBefore, startOfDay } from 'date-fns';
 import { COLORS, EMOJIS, IMAGES, MESSAGES, LIMITS } from '../constants';
 
 const logger = getLogger();
@@ -25,8 +26,8 @@ export class ChooseMealPeriod extends InteractionHandler {
       await interaction.deferReply({ ephemeral: true });
 
       // Parse restaurant IDs from customId (format: chooseMealPeriod-1,2,3)
-      const customIdParts = interaction.customId.split('-');
-      if (customIdParts.length < 2) {
+      const restaurantIds = parseIdList(customIdArgs(interaction.customId)[0]);
+      if (!restaurantIds) {
         await interaction.followUp({
           embeds: [
             {
@@ -40,10 +41,9 @@ export class ChooseMealPeriod extends InteractionHandler {
         return;
       }
 
-      const restaurantIds = customIdParts[1].split(',').map((id) => parseInt(id, 10));
 
       // Validate date
-      const rawDate = interaction.fields.getTextInputValue('date');
+      const rawDate = interaction.fields.getTextInputValue('date').trim();
       if (!isValidDateFormat(rawDate)) {
         await interaction.followUp({
           embeds: [
@@ -67,9 +67,8 @@ export class ChooseMealPeriod extends InteractionHandler {
       // Check if date is in the future and within range
       const visitDate = parseDateDDMMYYYY(rawDate);
       const today = startOfDay(new Date());
-      // const maxDate = addDays(today, LIMITS.DATE_RANGE_DAYS);
 
-      if (!isAfter(visitDate, today) && visitDate.getTime() !== today.getTime()) {
+      if (isBefore(visitDate, today)) {
         await interaction.followUp({
           embeds: [
             {
@@ -86,27 +85,14 @@ export class ChooseMealPeriod extends InteractionHandler {
         return;
       }
 
-      // if (isAfter(visitDate, maxDate)) {
-      //   await interaction.followUp({
-      //     embeds: [
-      //       {
-      //         title: `${EMOJIS.WARNING} Date trop lointaine`,
-      //         description: `La date ne peut pas dépasser ${LIMITS.DATE_RANGE_DAYS} jours dans le futur.\n\n💡 **Astuce :** Choisissez une date plus proche.`,
-      //         color: COLORS.WARNING,
-      //         thumbnail: {
-      //           url: 'https://emojicdn.elk.sh/📅?style=google',
-      //         },
-      //       },
-      //     ],
-      //     ephemeral: true,
-      //   });
-      //   return;
-      // }
-
       // Validate party mix
       const rawPartyMix = interaction.fields.getTextInputValue('partyMix');
-      const parsedPartyMix = Number.parseInt(rawPartyMix, 10);
-      if (isNaN(parsedPartyMix) || parsedPartyMix < LIMITS.PARTY_MIN || parsedPartyMix > LIMITS.PARTY_MAX) {
+      const parsedPartyMix = parsePositiveInt(rawPartyMix.trim());
+      if (
+        parsedPartyMix === null ||
+        parsedPartyMix < LIMITS.PARTY_MIN ||
+        parsedPartyMix > LIMITS.PARTY_MAX
+      ) {
         await interaction.followUp({
           embeds: [
             {

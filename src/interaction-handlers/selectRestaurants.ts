@@ -8,9 +8,10 @@ import {
 import { fetchRestaurants } from '../core/restaurants';
 import { handleInteractionError } from '../lib/errorHandler';
 import { getLogger } from '../config/logger';
-import { COLORS, EMOJIS, MESSAGES } from '../constants';
+import { COLORS, EMOJIS, LIMITS, MESSAGES } from '../constants';
 import { getCachedRestaurantSelection, clearCachedRestaurantSelection } from '../lib/restaurantSelection';
 import { buildRestaurantSelectionMessage } from '../lib/buildRestaurantSelectionMessage';
+import { customIdArgs, parsePositiveInt } from '../lib/customId';
 import { captureException } from '@sentry/node';
 
 const logger = getLogger();
@@ -22,7 +23,7 @@ export class SelectRestaurants extends InteractionHandler {
 
   public async run(interaction: ButtonInteraction): Promise<void> {
     try {
-      // Différent comportement selon si c'est le premier affichage ou une navigation
+      // Navigation edits the current message, starting fresh sends a new one
       const isNavigating = interaction.customId.startsWith('selectRestaurants-');
 
       if (isNavigating) {
@@ -37,9 +38,7 @@ export class SelectRestaurants extends InteractionHandler {
       }
 
       // Parse page number from customId (e.g., "selectRestaurants-1")
-      const page = isNavigating
-        ? parseInt(interaction.customId.split('-')[1], 10)
-        : 1;
+      const page = (isNavigating && parsePositiveInt(customIdArgs(interaction.customId)[0])) || 1;
 
       // Fetch all restaurants
       let restaurants;
@@ -78,7 +77,7 @@ export class SelectRestaurants extends InteractionHandler {
 
       // Pagination
       const totalRestaurants = sortedRestaurants.length;
-      const totalPages = Math.ceil(totalRestaurants / 20); // LIMITS.RESTAURANTS_PER_PAGE
+      const totalPages = Math.ceil(totalRestaurants / LIMITS.RESTAURANTS_PER_PAGE);
       const currentPage = Math.max(1, Math.min(page, totalPages));
 
       // Get current selection

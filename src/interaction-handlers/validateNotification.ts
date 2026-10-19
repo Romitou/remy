@@ -4,6 +4,8 @@ import { createBookAlert } from '../core/bookAlerts';
 import { RestaurantAlert } from '../typings/bookAlerts';
 import { captureException } from '@sentry/node';
 import { fetchRestaurantById } from '../core/restaurants';
+import { frenchMealPeriod, isMealPeriod } from '../core/utils';
+import { customIdArgs, parseIdList, parsePositiveInt } from '../lib/customId';
 import { COLORS, EMOJIS, IMAGES, MESSAGES } from '../constants';
 import { handleInteractionError } from '../lib/errorHandler';
 import { getLogger } from '../config/logger';
@@ -21,8 +23,12 @@ export class ValidateNotification extends InteractionHandler {
       await interaction.deferUpdate();
 
       // Parse customId: validateNotification-1,2,3-24/12/2025-4-lunch
-      const customIdParts = interaction.customId.split('-');
-      if (customIdParts.length < 5) {
+      const [rawRestaurantIds, rawDate, rawPartyMix, mealPeriod] = customIdArgs(
+        interaction.customId,
+      );
+      const restaurantIds = parseIdList(rawRestaurantIds);
+      const partyMix = parsePositiveInt(rawPartyMix);
+      if (!restaurantIds || !rawDate || !partyMix || !mealPeriod || !isMealPeriod(mealPeriod)) {
         await interaction.followUp({
           embeds: [
             {
@@ -36,10 +42,6 @@ export class ValidateNotification extends InteractionHandler {
         return;
       }
 
-      const restaurantIds = customIdParts[1].split(',').map((id) => parseInt(id, 10));
-      const rawDate = customIdParts[2];
-      const partyMix = parseInt(customIdParts[3], 10);
-      const mealPeriod = customIdParts[4];
 
       let bookAlert: RestaurantAlert;
       try {
@@ -73,20 +75,7 @@ export class ValidateNotification extends InteractionHandler {
       // Clear the cached selection
       await clearCachedRestaurantSelection(interaction.user.id);
 
-      let mealPeriodFr;
-      switch (bookAlert.mealPeriod) {
-        case 'BREAKFAST':
-          mealPeriodFr = 'Petit-déjeuner';
-          break;
-        case 'LUNCH':
-          mealPeriodFr = 'Déjeuner';
-          break;
-        case 'DINNER':
-          mealPeriodFr = 'Dîner';
-          break;
-        default:
-          mealPeriodFr = bookAlert.mealPeriod;
-      }
+      const mealPeriodFr = frenchMealPeriod(bookAlert.mealPeriod);
 
       // Fetch all restaurants
       const restaurants = await Promise.all(
@@ -114,7 +103,7 @@ export class ValidateNotification extends InteractionHandler {
         embeds: [
           {
             title: `${EMOJIS.SUCCESS} Notification créée avec succès !`,
-            description: `${EMOJIS.SPARKLES} **Parfait !** Je surveillerai les disponibilités pour vous.\n\n${EMOJIS.CHEF} **Promis !** Dès qu'une table se libère dans l'un de ces restaurants, vous recevrez un message privé instantanément.\n\n💡 **Astuce :** Gérez vos notifications via le bouton "*Mes notifications*" dans le salon principal.`,
+            description: `${EMOJIS.SPARKLES} **Parfait !** Je surveillerai les disponibilités pour vous.\n\n${EMOJIS.CHEF} **Promis !** Dès qu'une table se libère dans l'un de ces restaurants, vous recevrez un message privé instantanément.\n\n💡 **Astuce :** Gérez vos notifications via le bouton "*Voir mes alertes*" dans le salon principal.`,
             color: COLORS.SUCCESS,
             thumbnail: {
               url: validRestaurants[0]!.imageUrl || IMAGES.DEFAULT_RESTAURANT,

@@ -70,22 +70,6 @@ export function getRedisClient(): RedisClientType {
 }
 
 /**
- * Check if Redis is healthy
- */
-export async function isRedisHealthy(): Promise<boolean> {
-  try {
-    if (!redisClient || !redisClient.isOpen) {
-      return false;
-    }
-    await redisClient.ping();
-    return true;
-  } catch (error) {
-    logger.error({ error }, 'Redis health check failed');
-    return false;
-  }
-}
-
-/**
  * Subscribe to book notifications from Redis pub/sub
  */
 export async function subscribeBookNotifications(): Promise<void> {
