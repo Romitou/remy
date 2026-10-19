@@ -43,11 +43,8 @@ export class ConfirmNotification extends InteractionHandler {
         return;
       }
 
-
       // Fetch restaurant details
-      const restaurants = await Promise.all(
-        restaurantIds.map((id) => fetchRestaurantById(id)),
-      );
+      const restaurants = await Promise.all(restaurantIds.map((id) => fetchRestaurantById(id)));
       const validRestaurants = restaurants.filter((r) => r !== undefined);
 
       if (validRestaurants.length === 0) {
@@ -72,7 +69,9 @@ export class ConfirmNotification extends InteractionHandler {
       // Build confirmation buttons
       const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
         new ButtonBuilder()
-          .setCustomId(`validateNotification-${restaurantIds.join(',')}-${rawDate}-${partyMix}-${mealPeriod}`)
+          .setCustomId(
+            `validateNotification-${restaurantIds.join(',')}-${rawDate}-${partyMix}-${mealPeriod}`,
+          )
           .setLabel('✅ Confirmer et créer la notification')
           .setStyle(ButtonStyle.Success),
         new ButtonBuilder()
@@ -152,4 +151,3 @@ export class ConfirmNotification extends InteractionHandler {
     return this.some();
   }
 }
-

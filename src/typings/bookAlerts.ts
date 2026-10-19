@@ -1,26 +1,26 @@
 import { z } from 'zod';
 
 export interface RestaurantAlert {
-    id: number;
-    checks: RestaurantCheck[];
-    discordId: string;
-    date: string;
-    mealPeriod: 'BREAKFAST' | 'LUNCH' | 'DINNER';
-    partyMix: number;
-    completed: boolean;
-    createdAt: string;
-    updatedAt: string;
+  id: number;
+  checks: RestaurantCheck[];
+  discordId: string;
+  date: string;
+  mealPeriod: 'BREAKFAST' | 'LUNCH' | 'DINNER';
+  partyMix: number;
+  completed: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface RestaurantCheck {
-    id: number;
-    alertId: number;
-    restaurantId: number;
-    checkedAt: string;
-    checkCount: number;
-    errorCount: number;
-    createdAt: string;
-    updatedAt: string;
+  id: number;
+  alertId: number;
+  restaurantId: number;
+  checkedAt: string;
+  checkCount: number;
+  errorCount: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 /**

@@ -41,7 +41,6 @@ export class ChooseMealPeriod extends InteractionHandler {
         return;
       }
 
-
       // Validate date
       const rawDate = interaction.fields.getTextInputValue('date').trim();
       if (!isValidDateFormat(rawDate)) {
@@ -55,7 +54,7 @@ export class ChooseMealPeriod extends InteractionHandler {
                 url: 'https://emojicdn.elk.sh/📅?style=google',
               },
               footer: {
-                text: '💡 Besoin d\'aide ? Assurez-vous de bien respecter le format de date.',
+                text: "💡 Besoin d'aide ? Assurez-vous de bien respecter le format de date.",
               },
             },
           ],
@@ -113,9 +112,7 @@ export class ChooseMealPeriod extends InteractionHandler {
       }
 
       // Get restaurant info
-      const restaurants = await Promise.all(
-        restaurantIds.map((id) => fetchRestaurantById(id)),
-      );
+      const restaurants = await Promise.all(restaurantIds.map((id) => fetchRestaurantById(id)));
 
       const validRestaurants = restaurants.filter((r) => r !== undefined);
 
@@ -139,7 +136,9 @@ export class ChooseMealPeriod extends InteractionHandler {
       // Create meal period selection menu
       const componentRow = new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(
         new StringSelectMenuBuilder()
-          .setCustomId(`confirmNotification-${restaurantIds.join(',')}-${rawDate}-${parsedPartyMix}`)
+          .setCustomId(
+            `confirmNotification-${restaurantIds.join(',')}-${rawDate}-${parsedPartyMix}`,
+          )
           .setPlaceholder('🕐 Sélectionnez votre période de repas')
           .setOptions([
             {
@@ -152,7 +151,7 @@ export class ChooseMealPeriod extends InteractionHandler {
               label: 'Déjeuner',
               value: 'lunch',
               emoji: EMOJIS.LUNCH,
-              description: 'Profitez d\'une pause déjeuner gourmande',
+              description: "Profitez d'une pause déjeuner gourmande",
             },
             {
               label: 'Dîner',

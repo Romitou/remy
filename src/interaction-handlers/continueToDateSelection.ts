@@ -65,9 +65,12 @@ export class ContinueToDateSelection extends InteractionHandler {
         .setMaxLength(LIMITS.PARTY_INPUT_MAX_LENGTH)
         .setRequired(true);
 
-      const dateRow = new ActionRowBuilder<ModalActionRowComponentBuilder>().addComponents(dateInput);
-      const partySizeRow =
-        new ActionRowBuilder<ModalActionRowComponentBuilder>().addComponents(partySizeInput);
+      const dateRow = new ActionRowBuilder<ModalActionRowComponentBuilder>().addComponents(
+        dateInput,
+      );
+      const partySizeRow = new ActionRowBuilder<ModalActionRowComponentBuilder>().addComponents(
+        partySizeInput,
+      );
 
       modal.addComponents(dateRow, partySizeRow);
       await interaction.showModal(modal);
@@ -94,4 +97,3 @@ export class ContinueToDateSelection extends InteractionHandler {
     return this.none();
   }
 }
-

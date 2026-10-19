@@ -55,7 +55,9 @@ export class ToggleRestaurantSelection extends InteractionHandler {
       // Refresh the message to show the "Continue" button
       try {
         const restaurants = await fetchRestaurants();
-        const sortedRestaurants = [...restaurants].sort((a, b) => a.name.localeCompare(b.name, 'fr'));
+        const sortedRestaurants = [...restaurants].sort((a, b) =>
+          a.name.localeCompare(b.name, 'fr'),
+        );
         const totalPages = Math.ceil(sortedRestaurants.length / LIMITS.RESTAURANTS_PER_PAGE);
 
         // Extract current page from the message (look for "Page X/Y" in the button)
@@ -99,4 +101,3 @@ export class ToggleRestaurantSelection extends InteractionHandler {
     return this.none();
   }
 }
-
