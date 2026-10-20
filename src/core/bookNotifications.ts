@@ -3,17 +3,53 @@ import {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
-  Colors,
   DiscordAPIError,
   EmbedBuilder,
   RESTJSONErrorCodes,
+  User,
 } from 'discord.js';
 import { captureException } from '@sentry/node';
 import { bookNotificationSchema } from '../typings/bookAlerts';
-import { convertTime12to24, frenchMealPeriod, normalizeDate } from './utils';
+import { convertTime12to24, formatPartyMix, frenchMealPeriod, mealPeriodEmoji } from './utils';
+import { formatApiDate } from '../lib/dates';
+import { alertConfirmationDm, AlertSummary } from '../lib/views';
+import { buildCustomId, CUSTOM_IDS } from '../lib/customId';
+import { BOOKING_URL, COLORS, EMOJIS } from '../constants';
 import { getLogger } from '../config/logger';
 
 const logger = getLogger();
+
+/**
+ * Whether an error means that the user does not accept DMs from the bot
+ */
+export function isDmClosedError(error: unknown): boolean {
+  return (
+    error instanceof DiscordAPIError &&
+    error.code === RESTJSONErrorCodes.CannotSendMessagesToThisUser
+  );
+}
+
+/**
+ * Confirm a new alert in DM. Returns false if the user's DMs are closed, so that they can be
+ * warned while they are still in the flow.
+ */
+export async function sendAlertConfirmationDm(
+  user: User,
+  alertId: number,
+  summary: AlertSummary,
+): Promise<boolean> {
+  try {
+    await user.send({ embeds: [alertConfirmationDm(alertId, summary)] });
+    return true;
+  } catch (error) {
+    if (isDmClosedError(error)) {
+      return false;
+    }
+    logger.error({ error, userId: user.id, alertId }, 'Failed to send alert confirmation DM');
+    captureException(error, { tags: { component: 'alert-confirmation' } });
+    return true;
+  }
+}
 
 /**
  * Handle a raw message received on the "restaurant-notifications" channel:
@@ -39,63 +75,56 @@ export async function handleBookNotificationMessage(message: string): Promise<vo
     return;
   }
 
-  const bookNotification = parsed.data;
+  const notification = parsed.data;
   const logContext = {
-    userId: bookNotification.discordId,
-    alertId: bookNotification.alertId,
-    restaurant: bookNotification.restaurant.name,
-    date: bookNotification.date,
+    userId: notification.discordId,
+    alertId: notification.alertId,
+    restaurant: notification.restaurant.name,
+    date: notification.date,
   };
   logger.info(logContext, 'Processing book notification');
 
+  const hours = notification.hours.map(convertTime12to24);
+
   const embed = new EmbedBuilder()
-    .setTitle('📬 Nouvelle notification de réservation')
-    .setColor(Colors.Navy)
-    .setImage(bookNotification.restaurant.imageUrl || null)
-    .setFooter({
-      text: `Alerte de disponibilité associée à votre notification n°${bookNotification.alertId}`,
-    })
+    .setTitle(`${EMOJIS.RESTAURANT} Une table est disponible !`)
+    .setColor(COLORS.SUCCESS)
     .setDescription(
-      "Hey, ici Rémy ! Une table est **actuellement disponible à la réservation** selon les critères que vous avez définis, sur l'application Disneyland Paris.",
+      `**${notification.restaurant.name}** a de la place le **${formatApiDate(notification.date)}** pour **${formatPartyMix(notification.partyMix)}**.\n\nRéservez vite dans l'application ou sur le site Disneyland Paris : les tables partent souvent en quelques minutes !`,
     )
+    .setImage(notification.restaurant.imageUrl || null)
     .setFields([
       {
-        name: '🏢 Restaurant',
-        value: bookNotification.restaurant.name,
+        name: `${EMOJIS.CLOCK} Horaire(s)`,
+        value: hours.length > 0 ? hours.join(' · ') : 'Voir dans l’application',
         inline: true,
       },
       {
-        name: '📅 Date',
-        value: normalizeDate(bookNotification.date),
+        name: `${mealPeriodEmoji(notification.mealPeriod)} Repas`,
+        value: frenchMealPeriod(notification.mealPeriod),
         inline: true,
       },
-      {
-        name: '🕒 Heure(s)',
-        value: bookNotification.hours.map(convertTime12to24).join(', ') || '-',
-        inline: true,
-      },
-      {
-        name: '🍽️ Nombre de couverts',
-        value: `${bookNotification.partyMix} couverts`,
-        inline: true,
-      },
-      {
-        name: '😋 Période de repas',
-        value: frenchMealPeriod(bookNotification.mealPeriod),
-        inline: true,
-      },
-    ]);
+    ])
+    .setFooter({
+      text: `Alerte n°${notification.alertId} · Sans réponse de votre part, je continue de surveiller`,
+    });
 
   const componentRow = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder().setLabel('Réserver').setStyle(ButtonStyle.Link).setURL(BOOKING_URL),
     new ButtonBuilder()
-      .setCustomId(`markNotificationSolved-${bookNotification.alertId}`)
-      .setLabel('Marquer comme réservé')
+      .setCustomId(buildCustomId(CUSTOM_IDS.ALERT_SOLVED, notification.alertId))
+      .setLabel("J'ai réservé")
       .setStyle(ButtonStyle.Success)
-      .setEmoji('✅'),
+      .setEmoji(EMOJIS.SUCCESS),
+    new ButtonBuilder()
+      .setCustomId(buildCustomId(CUSTOM_IDS.STOP_ALERT, notification.alertId))
+      .setLabel("Arrêter l'alerte")
+      .setStyle(ButtonStyle.Secondary)
+      .setEmoji(EMOJIS.BELL_OFF),
   );
 
   try {
-    const user = await container.client.users.fetch(bookNotification.discordId);
+    const user = await container.client.users.fetch(notification.discordId);
     await user.send({
       embeds: [embed],
       components: [componentRow],
@@ -103,10 +132,7 @@ export async function handleBookNotificationMessage(message: string): Promise<vo
     logger.info(logContext, 'Book notification sent successfully');
   } catch (error) {
     // Users who closed their DMs are an expected situation, not a bug to report
-    if (
-      error instanceof DiscordAPIError &&
-      error.code === RESTJSONErrorCodes.CannotSendMessagesToThisUser
-    ) {
+    if (isDmClosedError(error)) {
       logger.warn(logContext, 'Cannot send book notification: user DMs are closed');
       return;
     }

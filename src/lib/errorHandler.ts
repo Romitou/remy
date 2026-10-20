@@ -1,7 +1,7 @@
 import { captureException } from '@sentry/node';
-import { EmbedBuilder, Interaction } from 'discord.js';
+import { Interaction, MessageFlags } from 'discord.js';
 import { getLogger } from '../config/logger';
-import { COLORS, IMAGES, MESSAGES } from '../constants';
+import { errorView } from './views';
 
 const logger = getLogger();
 
@@ -14,7 +14,7 @@ export interface ErrorContext {
 }
 
 /**
- * Handle errors in interaction handlers
+ * Handle errors in interaction handlers and commands
  */
 export async function handleInteractionError(
   interaction: Interaction,
@@ -40,19 +40,13 @@ export async function handleInteractionError(
     extra: context,
   });
 
-  const errorEmbed = new EmbedBuilder()
-    .setTitle(MESSAGES.ERROR.GENERIC.TITLE)
-    .setDescription(MESSAGES.ERROR.GENERIC.DESCRIPTION)
-    .setColor(COLORS.ERROR)
-    .setImage(IMAGES.ERROR)
-    .setTimestamp();
-
   try {
     if (interaction.isRepliable()) {
+      const view = errorView();
       if (interaction.replied || interaction.deferred) {
-        await interaction.followUp({ embeds: [errorEmbed], ephemeral: true });
+        await interaction.followUp({ ...view, flags: MessageFlags.Ephemeral });
       } else {
-        await interaction.reply({ embeds: [errorEmbed], ephemeral: true });
+        await interaction.reply({ ...view, flags: MessageFlags.Ephemeral });
       }
     }
   } catch (replyError) {

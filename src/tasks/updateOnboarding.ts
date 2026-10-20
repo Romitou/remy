@@ -11,6 +11,7 @@ import {
 import { DailyReport, Statistics } from '../typings/core';
 import { fetchDailyReport, fetchStatistics, isServiceOperational } from '../core/statistics';
 import { getEnvironment } from '../config/environment';
+import { IMAGES } from '../constants';
 import { getLogger } from '../config/logger';
 
 const logger = getLogger();
@@ -29,7 +30,13 @@ function createOnboardingEmbed(
     'Je fais une petite pause pour le moment. Les équipes sont déjà au courant et travaillent à rétablir le service. À très bientôt !';
 
   const descriptionText =
-    "👋 Je suis Rémy, votre assistant personnel pour les réservations de restaurants à Disneyland Paris. Ma mission ? Vous avertir instantanément dès qu'une table se libère dans vos restaurants préférés ! ✨";
+    "👋 Je suis Rémy ! Je surveille les restaurants de Disneyland Paris et vous envoie un message privé dès qu'une table se libère. ✨";
+
+  const howItWorks =
+    '1️⃣ **Créer une alerte** : choisissez un restaurant, une date et un repas\n' +
+    '2️⃣ Je vérifie les disponibilités en continu\n' +
+    "3️⃣ Vous recevez un message privé dès qu'une table se libère\n\n" +
+    '💡 Autorisez les messages privés de ce serveur pour être prévenu. Commandes : `/alerte` et `/mes-alertes`.';
 
   const stats: string[] = [];
   if (statistics && !maintenanceMode && statistics.alerts > 0) {
@@ -44,9 +51,10 @@ function createOnboardingEmbed(
     description: descriptionText,
     color: maintenanceMode ? Colors.Gold : Colors.Blurple,
     image: {
-      url: 'https://s3-01.romitou.fr/disneytables/welcome.jpg',
+      url: IMAGES.WELCOME,
     },
     fields: [
+      { name: '✨ Comment ça marche ?', value: howItWorks },
       {
         name: maintenanceMode ? '🟠 Pause temporaire' : '🟢 Service opérationnel',
         value: maintenanceMode
@@ -126,7 +134,7 @@ export default async function updateOnboarding(): Promise<void> {
       .setEmoji(maintenanceMode ? '⏸️' : '✨'),
     new ButtonBuilder()
       .setCustomId('myNotifications')
-      .setLabel('Voir mes alertes')
+      .setLabel('Mes alertes')
       .setStyle(ButtonStyle.Primary)
       .setEmoji('📋'),
   );
