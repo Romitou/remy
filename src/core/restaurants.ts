@@ -65,3 +65,13 @@ export async function fetchRestaurantById(id: number): Promise<Restaurant | unde
   const restaurants = await fetchRestaurants();
   return restaurants.find((restaurant) => restaurant.id === id);
 }
+
+/**
+ * Restaurants users can pick, sorted by name
+ */
+export async function fetchSelectableRestaurants(): Promise<Restaurant[]> {
+  const restaurants = await fetchRestaurants();
+  return restaurants
+    .filter((restaurant) => restaurant.displayed !== false)
+    .sort((a, b) => a.name.localeCompare(b.name, 'fr'));
+}

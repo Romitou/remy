@@ -2,10 +2,10 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   convertTime12to24,
+  formatPartyMix,
   frenchMealPeriod,
   isMealPeriod,
-  isValidDateFormat,
-  normalizeDate,
+  normalizeText,
 } from '../src/core/utils';
 
 describe('convertTime12to24', () => {
@@ -25,25 +25,6 @@ describe('convertTime12to24', () => {
   });
 });
 
-describe('normalizeDate', () => {
-  it('converts YYYY-MM-DD to DD/MM/YYYY', () => {
-    assert.equal(normalizeDate('2025-12-24'), '24/12/2025');
-  });
-});
-
-describe('isValidDateFormat', () => {
-  it('accepts valid DD/MM/YYYY dates', () => {
-    assert.equal(isValidDateFormat('24/12/2025'), true);
-    assert.equal(isValidDateFormat('29/02/2024'), true);
-  });
-
-  it('rejects malformed or impossible dates', () => {
-    for (const value of ['2025-12-24', '24/12/25', '31/02/2025', '29/02/2025', '32/01/2025']) {
-      assert.equal(isValidDateFormat(value), false, `value: ${value}`);
-    }
-  });
-});
-
 describe('meal periods', () => {
   it('recognizes known meal periods', () => {
     assert.equal(isMealPeriod('lunch'), true);
@@ -54,5 +35,18 @@ describe('meal periods', () => {
     assert.equal(frenchMealPeriod('BREAKFAST'), 'Petit-déjeuner');
     assert.equal(frenchMealPeriod('lunch'), 'Déjeuner');
     assert.equal(frenchMealPeriod('Dinner'), 'Dîner');
+  });
+});
+
+describe('formatPartyMix', () => {
+  it('uses the singular for one person', () => {
+    assert.equal(formatPartyMix(1), '1 personne');
+    assert.equal(formatPartyMix(4), '4 personnes');
+  });
+});
+
+describe('normalizeText', () => {
+  it('ignores case and accents', () => {
+    assert.equal(normalizeText('  Bistrot Chez Rémy '), 'bistrot chez remy');
   });
 });

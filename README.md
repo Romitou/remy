@@ -8,8 +8,10 @@ Using the [DisneyTables](https://github.com/Romitou/DisneyTables) project specia
 
 ## 🚀 Features
 
-- 📬 Real-time notifications for restaurant availability, sent in DM
-- 🔔 Custom alerts based on date, party size, and meal period
+- 📬 Real-time notifications for restaurant availability, sent in DM with a booking link
+- 🔔 Alerts created in two steps: pick a restaurant (with search), then date, party size and meal
+- ✏️ Edit, delete or bulk-delete alerts; warning when DMs are closed
+- ⌨️ `/alerte` (with restaurant autocompletion) and `/mes-alertes` commands
 - 🤖 Discord.js v14 with Sapphire Framework v5
 - 📊 Daily reports and live statistics in the bot presence
 - 🔄 Automatic reconnection for Redis and retries for API calls
@@ -87,11 +89,12 @@ The provided `docker-compose.yml` starts the bot along with a Redis server; the 
 
 ```
 src/
+├── commands/              # Slash commands (/alerte, /mes-alertes)
 ├── config/                # Environment validation and logger
 ├── constants/             # Colors, emojis, limits and texts
 ├── core/                  # API, Redis and notification logic
 ├── interaction-handlers/  # Discord interaction handlers (buttons, menus, modals)
-├── lib/                   # Shared helpers (errors, customIds, restaurant selection)
+├── lib/                   # Views, dates, drafts, search, customIds, errors
 ├── tasks/                 # Scheduled tasks (presence, onboarding, daily report)
 ├── typings/               # TypeScript type definitions
 ├── instrument.ts          # Sentry initialization, loaded first
@@ -99,7 +102,10 @@ src/
 test/                      # Unit tests (node:test)
 ```
 
-See [ARCHITECTURE.md](./ARCHITECTURE.md) for the alert creation workflow.
+See [ARCHITECTURE.md](./ARCHITECTURE.md) for the user flows and design choices.
+
+The bot must be invited with the `bot` and `applications.commands` scopes for the slash commands
+to be available.
 
 ## 📝 License
 

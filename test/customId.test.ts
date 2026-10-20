@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { customIdArgs, parseIdList, parsePositiveInt } from '../src/lib/customId';
+import { buildCustomId, customIdArgs, customIdPrefix, parsePositiveInt } from '../src/lib/customId';
 
 describe('customIdArgs', () => {
   it('returns the parts after the prefix', () => {
@@ -29,15 +29,11 @@ describe('parsePositiveInt', () => {
   });
 });
 
-describe('parseIdList', () => {
-  it('parses comma-separated ids', () => {
-    assert.deepEqual(parseIdList('1,22,333'), [1, 22, 333]);
-  });
-
-  it('rejects the whole list if one id is invalid', () => {
-    assert.equal(parseIdList('1,abc,3'), null);
-    assert.equal(parseIdList('1,,3'), null);
-    assert.equal(parseIdList(''), null);
-    assert.equal(parseIdList(undefined), null);
+describe('buildCustomId', () => {
+  it('joins the prefix and arguments, which can be read back', () => {
+    const customId = buildCustomId('openAlertForm', 12, 0);
+    assert.equal(customId, 'openAlertForm-12-0');
+    assert.equal(customIdPrefix(customId), 'openAlertForm');
+    assert.deepEqual(customIdArgs(customId), ['12', '0']);
   });
 });
