@@ -1,7 +1,23 @@
 {
   "name": "remy",
-  "version": "2.0.0",
+  "version": "1.0.0",
   "description": "Discord bot for Disneyland Paris restaurant booking notifications",
+  "author": "Romain (romitou) <romitou@protonmail.com>",
+  "license": "GPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Romitou/Remy.git"
+  },
+  "keywords": [
+    "discord-bot",
+    "disneyland-paris",
+    "reservations",
+    "alerts",
+    "typescript",
+    "sapphire-framework",
+    "redis",
+    "notifications"
+  ],
   "main": "./build/main.js",
   "type": "commonjs",
   "engines": {

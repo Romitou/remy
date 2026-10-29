@@ -1,72 +1,48 @@
-# 🏗️ Architecture
+# Architecture et fonctionnement interne
 
-Rémy est un bot Discord (discord.js v14 + Sapphire v5) qui sert d'interface à l'API
-[DisneyTables](https://github.com/Romitou/DisneyTables) : les utilisateurs y gèrent leurs alertes, et
-DisneyTables publie sur Redis les disponibilités trouvées, que Rémy transmet en message privé.
+Rémy est conçu comme un client événementiel pour l'écosystème DisneyTables. Le bot ne sonde pas lui-même les serveurs de Disneyland Paris : il délègue la détection des créneaux à DisneyTables et se concentre sur l'expérience utilisateur Discord (création d'alertes, routage d'interactions et expédition des notifications).
 
-```
-Utilisateur ──▶ Discord ──▶ Rémy ──HTTP──▶ API DisneyTables
-                              ▲                   │
-                              └──── Redis pub/sub ◀┘  (canal "restaurant-notifications")
-```
+## Flux d'information
 
-## Parcours utilisateur
+Le traitement des alertes repose sur deux flux distincts :
 
-### Créer une alerte (2 étapes)
+1. **Gestion des alertes (requêtes HTTP sortantes)** :
+   Lorsque l'utilisateur configure, modifie ou supprime une alerte via l'interface Discord, Rémy effectue des appels REST authentifiés auprès de l'API DisneyTables. Les opérations réseau sont encapsulées dans `src/core/` avec une politique de retry automatique en cas d'erreur réseau transitoire.
 
-Point d'entrée : bouton **Créer une alerte** du message d'accueil, ou commande `/alerte [restaurant]`
-(avec autocomplétion : le formulaire s'ouvre directement).
+2. **Réception des disponibilités (Redis Pub/Sub)** :
+   Dès que DisneyTables repère une table libre, il émet un événement JSON sur le canal Redis `restaurant-notifications`. Rémy maintient une connexion permanente d'écoute. Le payload entrant est validé par un schéma Zod (`src/core/bookNotifications.ts`), puis envoyé en message privé aux utilisateurs concernés.
 
-1. **Choix du restaurant** (`restaurantPicker`) : menu de 25 restaurants par page, boutons
-   précédent/suivant, et **Rechercher** (`searchRestaurant` → `searchRestaurantForm`), insensible
-   aux accents et à la casse.
-2. **Formulaire** (`pickRestaurant` / `openAlertForm` → `submitAlertForm`) : date, nombre de
-   convives et repas dans une seule fenêtre. La date accepte `24/12`, `24/12/26`, `24-12-2026`…
-   Le formulaire est pré-rempli avec les dernières valeurs saisies (brouillon Redis, 24 h).
+## Parcours utilisateur et interactions Discord
 
-À la validation :
+L'interface s'appuie sur le framework Sapphire (`@sapphire/framework`) pour découpler les commandes slash des interactions de composants (boutons, formulaires modaux, menus déroulants).
 
-- erreurs listées toutes ensemble, avec un bouton **Corriger** qui rouvre le formulaire pré-rempli ;
-- refus des doublons et au-delà de 10 alertes actives ;
-- création de l'alerte, puis **message privé de confirmation**. S'il échoue (MP fermés),
-  l'utilisateur est averti immédiatement qu'il ne recevra pas de notification ;
-- boutons **Annuler**, **Nouvelle alerte** (formulaire pré-rempli : pratique pour plusieurs
-  restaurants le même jour) et **Mes alertes**.
+### Création d'alerte
 
-### Gérer ses alertes
+L'utilisateur peut démarrer de deux façons :
+- Via le bouton du panneau d'accueil ou la commande `/alerte` sans argument : ouvre un sélecteur paginé (`restaurantPicker`) listant les restaurants par tranche de 25, avec possibilité de faire une recherche textuelle insensible à la casse et aux accents.
+- Via `/alerte [restaurant]` : utilise l'autocomplétion native de Discord pour choisir le restaurant directement et ouvrir le formulaire sans passer par la liste.
 
-Bouton **Mes alertes** ou commande `/mes-alertes` (`myAlerts`) : liste triée par date, puis pour
-chaque alerte (`manageAlert`) **Modifier** (formulaire pré-rempli, l'ancienne alerte est remplacée),
-**Supprimer** ou **Retour**. **Tout supprimer** demande une confirmation (`deleteAlert`).
+Le formulaire modal rassemble l'ensemble des critères nécessaires (date de visite, période de repas, taille du groupe) :
+- Les formats de date courants sont tolérés (`24/12`, `24/12/26`, `24-12-2026`). Si l'année est omise, le bot cible la prochaine occurrence à venir.
+- Les valeurs saisies sont temporairement mémorisées dans Redis sous forme de brouillon (durée de vie 24 h), permettant de pré-remplir les formulaires ultérieurs pour faciliter les réservations multiples sur une même journée.
+- Si l'envoi du message privé de confirmation échoue (messages privés désactivés sur le serveur), un avertissement visible informe immédiatement l'utilisateur.
 
-### Notification
+### Gestion et cycle de vie
 
-DisneyTables publie un message JSON validé par zod (`core/bookNotifications.ts`). Rémy l'envoie en
-MP avec trois boutons : **Réserver** (lien), **J'ai réservé** et **Arrêter l'alerte**
-(`closeAlertFromNotification`). Sans action, l'alerte reste active.
+La commande `/mes-alertes` affiche les alertes enregistrées par l'utilisateur. Chaque alerte peut être inspectée, modifiée (réouverture du formulaire pré-rempli) ou supprimée unitairement. Une option de suppression globale avec confirmation est également proposée.
 
-## Principes
+Chaque interaction vérifie systématiquement que l'utilisateur qui clique est bien le propriétaire de l'alerte ciblée.
 
-- **Un message par parcours** : une interaction issue d'un message éphémère du bot le remplace
-  (`lib/respond.ts`) au lieu d'empiler de nouveaux messages.
-- **Vues pures** (`lib/views.ts`) : chaque écran est une fonction sans appel réseau, testée
-  (`test/views.test.ts`) contre les limites de Discord.
-- **customIds** centralisés dans `lib/customId.ts` (`préfixe-arg1-arg2`). Les composants des
-  anciennes versions affichent « Ce message a expiré » (`legacyComponents`) au lieu d'échouer.
-- **Propriété** : toute action sur une alerte vérifie qu'elle appartient à l'utilisateur.
+### Réception d'une notification
 
-## Arborescence
+Lorsqu'un créneau correspond à une alerte active, le bot transmet un message privé contenant les détails de la réservation et trois actions possibles :
+- Un lien externe menant à la réservation Disneyland Paris.
+- Un bouton confirmant la réservation (qui clôture l'alerte).
+- Un bouton de désactivation si l'utilisateur n'est plus intéressé.
 
-```
-src/
-├── commands/              # /alerte, /mes-alertes
-├── config/                # Variables d'environnement (zod) et logger (pino)
-├── constants/             # Couleurs, emojis, limites, textes communs
-├── core/                  # API (axios), Redis, notifications, statistiques
-├── interaction-handlers/  # Boutons, menus et formulaires
-├── lib/                   # Vues, dates, brouillon, recherche, customIds, erreurs
-├── tasks/                 # Présence, message d'accueil, rapport quotidien
-├── typings/
-├── instrument.ts          # Initialisation de Sentry, chargée en premier
-└── main.ts
-```
+## Choix de conception
+
+- **Mise à jour en place des messages** : pour éviter de polluer le canal ou les messages privés de l'utilisateur avec des réponses successives, les interactions éphémères mettent à jour le message d'origine (`src/lib/respond.ts`) plutôt que d'en créer de nouveaux.
+- **Rendu découplé (vues pures)** : la construction des embeds et des composants interactifs est isolée dans `src/lib/views.ts`. Ces fonctions de rendu sont synchrones, sans dépendance réseau, ce qui permet de les tester unitairement face aux contraintes de format de l'API Discord (longueur de titre, nombre maximal d'options par menu).
+- **Format uniforme des identifiants personnalisés** : les `customId` des composants suivent la convention `action:arg1:arg2` (`src/lib/customId.ts`), facilitant le routage des événements et la transmission d'état sans persistance superflue. Les interactions datant d'une version antérieure du bot sont interceptées pour afficher un message d'expiration explicite.
+- **Résilience** : les connexions Redis et les erreurs Discord critiques font l'objet d'une reconnexion gérée et de remontées Sentry pour assurer la continuité de service en production.
